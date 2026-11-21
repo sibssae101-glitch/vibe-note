@@ -9,6 +9,10 @@
   - 브리핑 — 날짜별 알림 카드(미장 마감·점수 감시·속보·국장 마감) · 항목 체크
   - 메모 — 자유 서술. 좁은 화면에서는 탭을 열면 바로 쓰는 화면이 열리고, 넓은 화면에서는 카드 목록 → 편집기.
     **S펜 손글씨**(필압 반영·지우개·되돌리기·전체 지우기)로 쓴 그림이 글 아래에 함께 붙습니다.
+- 브리핑은 **자동으로 갱신**됩니다 — 열 때마다 `data/briefings/` 의 JSON 을 받아 그날 카드로 얹습니다.
+  받아 둔 사본은 `vn-brief-auto-v1` 에 남아 인터넷이 없으면 마지막 것으로 보입니다. 지난 날짜는 접어 둔 목록으로 보입니다.
+- 앱(안드로이드 WebView) 안에서 열면 **기기 달력 일정**이 그날 카드와 달력에 자동으로 얹힙니다
+  (`window.VibeNoteCalendar.events(from,to)` 통로가 있을 때만 · 브라우저에서는 그 통로가 없어 표시되지 않습니다).
 - 저장: 각자 폰 브라우저의 `localStorage` 에만 남습니다. 서버가 없고, 어디로도 보내지 않습니다.
 - 첫 방문에는 무엇을 적는 노트인지 보이도록 **예시**가 채워져 있고, `예시 지우기` 로 한 번에 비울 수 있습니다.
 - 외부 CDN·폰트·추적 스크립트를 쓰지 않습니다(단일 HTML + 아이콘 + 서비스 워커).
@@ -26,6 +30,7 @@ https://sibssae101-glitch.github.io/vibe-note/
 | `vn-briefing-checks-v1` | 브리핑 항목 체크 `{"2026-11-22/07:00/0": true}` |
 | `vn-notes-v1` | 메모 `[{id, text, created, updated, img?}]` — `img` 는 손글씨 PNG data URL |
 | `vn-theme` | `light` / `dark` |
+| `vn-brief-auto-v1` | 자동으로 받아 둔 브리핑 `{at, days:{YYYY-MM-DD:[…]}}` |
 | `vn-example-v1`, `vn-example-brief-v1`, `vn-memos-migrated-v1` | 예시·이전자료 처리 표시 |
 
 ## 파일
@@ -34,13 +39,14 @@ https://sibssae101-glitch.github.io/vibe-note/
 |---|---|
 | `index.html` | 화면 전체(HTML·CSS·JS 한 장, 외부 요청 없음) |
 | `manifest.webmanifest` | 홈 화면에 추가할 때 쓰는 이름·아이콘·색 |
-| `sw.js` | 오프라인 캐시(한 번 열면 인터넷 없이도 열림) |
+| `sw.js` | 오프라인 캐시(한 번 열면 인터넷 없이도 열림). `data/briefings/` 는 캐시에 가두지 않습니다 |
+| `data/briefings/*.json` | 브리핑 배포본(`index.json` + 날짜별). 피클이 `notes/briefings/` 에 쌓은 것을 내보낸 것 — 손으로 고치지 않습니다 |
 | `icon-*.png` | 홈 화면 아이콘 |
 
 ## 고칠 때
 
 1. `index.html` 을 고친다.
-2. 오프라인 캐시를 새로 받게 `sw.js` 의 `vibe-note-v9` 숫자를 올린다(`vibe-note-v10` …).
+2. 오프라인 캐시를 새로 받게 `sw.js` 의 `vibe-note-v10` 숫자를 올린다(`vibe-note-v11` …).
 3. `main` 에 올리면 1~2분 뒤 GitHub Pages 에 반영된다. 이미 한 번 열어 본 사람은
    서비스 워커가 이전 화면을 캐시에 들고 있어, 다음에 열 때 새로 받아 간다.
 
