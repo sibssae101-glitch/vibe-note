@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f3f5f9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="바이브 노트">
+<title>바이브 노트</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<script>
+/* 테마는 그리기 전에 정한다 — 깜빡임 없이.
+   저장된 값 → 없으면 폰 설정(prefers-color-scheme) → 라이트 */
+(function () {
+  var t = null;
+  try { t = window.localStorage && localStorage.getItem("vn-theme"); } catch (e) {}
+  if (t !== "light" && t !== "dark") {
+    t = "light";
+    try {
+      if (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) t = "dark";
+    } catch (e) {}
+  }
+  document.documentElement.setAttribute("data-theme", t);
+})();
+</script>
+<style>
+  /* ── 라이트 (기본) ───────────────────────────── */
+  :root{
+    --bg:#f3f5f9;
+    --bg-soft:#fbfcfe;
+    --card:#ffffff;
+    --line:#e6e9f1;
+    --line2:#ccd2df;
+    --text:#14161b;
+    --dim:#5b6373;
+    --dim2:#8b93a3;
+    --fill:#eef1f6;
+    --accent:#d93b30;
+    --accent-2:#ff7a5c;
+    --accent-soft:rgba(217,59,48,.08);
+    --accent-line:rgba(217,59,48,.26);
+    --ok:#0d9560;
+    --ok-soft:rgba(13,149,96,.12);
+    --shadow:0 1px 2px rgba(18,23,35,.05), 0 10px 26px rgba(18,23,35,.06);
+    --shadow-sm:0 1px 2px rgba(18,23,35,.06);
+    --r:18px;
+    --r-sm:13px;
+    --hdr:rgba(243,245,249,.86);
+  }
+  /* ── 다크 ────────────────────────────────────── */
+  [data-theme="dark"]{
+    --bg:#0d0f13;
+    --bg-soft:#121620;
+    --card:#171b23;
+    --line:#252a35;
+    --line2:#3a4250;
+    --text:#e9ecf2;
+    --dim:#98a1b1;
+    --dim2:#6a7280;
+    --fill:#1d222c;
+    --accent:#ff5b52;
+    --accent-2:#ff9678;
+    --accent-soft:rgba(255,91,82,.10);
+    --accent-line:rgba(255,91,82,.30);
+    --ok:#5cdea0;
+    --ok-soft:rgba(92,222,160,.14);
+    --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 12px 28px rgba(0,0,0,.38);
+    --shadow-sm:0 1px 0 rgba(255,255,255,.03) inset;
+    --r:18px;
+    --r-sm:13px;
+    --hdr:rgba(13,15,19,.82);
+  }
+
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  html{-webkit-text-size-adjust:100%;background:var(--bg)}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+    font-size:15px;line-height:1.62;letter-spacing:-.2px;
+    padding:0 0 calc(88px + env(safe-area-inset-bottom));
+    overflow-wrap:break-word;
+    -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  a{color:inherit}
+  button{font-family:inherit}
+
+  /* ── 머리 ───────────────────────────────────── */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;gap:10px;
+    padding:calc(12px + env(safe-area-inset-top)) 16px 12px;
+    background:var(--hdr);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    backdrop-filter:saturate(180%) blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{min-width:0;flex:1}
+  .brand .eyebrow{
+    display:flex;align-items:center;gap:6px;
+    font-size:10.5px;font-weight:700;letter-spacing:.9px;
+    color:var(--accent);text-transform:uppercase;
+  }
+  .brand .eyebrow i{
+    width:6px;height:6px;border-radius:50%;
+    background:linear-gradient(160deg,var(--accent),var(--accent-2));
+    display:inline-block;
+  }
+  h1{
+    margin:2px 0 0;font-size:21px;font-weight:800;letter-spacing:-.6px;
+    line-height:1.2;
+  }
+  .theme{
+    flex:0 0 auto;width:40px;height:40px;border-radius:13px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--card);color:var(--text);
+    border:1px solid var(--line);box-shadow:var(--shadow-sm);
+    cursor:pointer;padding:0;
+    transition:background .2s ease, border-color .2s ease, transform .12s ease;
+  }
+  .theme:active{transform:scale(.94)}
+  .theme svg{width:19px;height:19px;display:block}
+  .theme .moon{display:none}
+  [data-theme="dark"] .theme .sun{display:none}
+  [data-theme="dark"] .theme .moon{display:block}
+
+  main{padding:0 14px}
+
+  /* ── 안내 띠 ────────────────────────────────── */
+  .notice{
+    display:flex;align-items:center;gap:10px;
+    margin:12px 14px 0;padding:10px 12px;
+    background:var(--card);border:1px dashed var(--accent-line);
+    border-radius:var(--r-sm);box-shadow:var(--shadow-sm);
+    font-size:11.5px;line-height:1.5;color:var(--dim);
+  }
+  .notice span{flex:1;min-width:0}
+  .notice b{color:var(--accent)}
+  .notice button{
+    flex:0 0 auto;font-size:11px;font-weight:800;color:#fff;
+    background:var(--accent);border:0;border-radius:9px;
+    padding:7px 10px;cursor:pointer;
+  }
+
+  /* ── 구역 제목 ──────────────────────────────── */
+  section{margin:22px 0 0}
+  h2{
+    display:flex;align-items:center;gap:8px;
+    margin:0 0 10px;padding-right:2px;
+    font-size:12.5px;font-weight:750;letter-spacing:.2px;color:var(--dim);
+  }
+  h2::before{
+    content:"";width:3px;height:13px;border-radius:2px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2));
+  }
+  .count{
+    margin-left:auto;font-size:11px;font-weight:700;
+    color:var(--accent);background:var(--accent-soft);
+    border:1px solid var(--accent-line);border-radius:999px;padding:2px 9px;
+  }
+  .count.zero{color:var(--dim2);background:var(--fill);border-color:var(--line)}
+
+  /* ── 안 끝난 일 ─────────────────────────────── */
+  .open{
+    list-style:none;margin:0;padding:4px 14px;
+    background:var(--card);border:1px solid var(--line);
+    border-left:3px solid var(--accent);
+    border-radius:var(--r);box-shadow:var(--shadow);
+  }
+  .open li{
+    display:flex;align-items:flex-start;gap:10px;padding:11px 0;
+    font-size:13.5px;border-top:1px solid var(--line);
+  }
+  .open li:first-child{border-top:none}
+  .open .jump{
+    margin-left:auto;flex:0 0 auto;font-size:11px;font-weight:600;font-family:inherit;
+    color:var(--dim);background:var(--fill);border:1px solid var(--line);
+    border-radius:999px;padding:2px 8px;white-space:nowrap;cursor:pointer;
+  }
+  .open .jump:active{background:var(--accent-soft);color:var(--accent)}
+  .open .txt{flex:1;min-width:0}
+
+  /* ── 체크박스 ───────────────────────────────── */
+  input[type=checkbox]{
+    appearance:none;-webkit-appearance:none;
+    width:19px;height:19px;margin:2px 0 0;flex:0 0 auto;
+    border-radius:7px;border:1.6px solid var(--line2);
+    background:var(--card);position:relative;cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  input[type=checkbox]:checked{
+    background:linear-gradient(160deg,var(--accent),var(--accent-2));
+    border-color:transparent;
+  }
+  input[type=checkbox]:checked::after{
+    content:"";position:absolute;left:6.5px;top:2.5px;width:5px;height:10px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);
+  }
+
+  /* ── 달력 ───────────────────────────────────── */
+  .cal{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r);padding:14px 13px 12px;box-shadow:var(--shadow);
+  }
+  .calhead{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+  .calhead button{
+    height:32px;flex:0 0 auto;
+    background:var(--fill);color:var(--text);
+    border:1px solid var(--line);border-radius:10px;
+    font-family:inherit;font-size:15px;line-height:1;cursor:pointer;padding:0;
+    transition:background .15s ease;
+  }
+  .calhead .nav{width:34px}
+  .calhead .today-btn{width:auto;padding:0 10px;font-size:11px;font-weight:800;color:var(--dim)}
+  .calhead button:active{background:var(--accent-soft);color:var(--accent)}
+  .ym{flex:1;text-align:center;font-size:14.5px;font-weight:750;letter-spacing:-.2px}
+  .dow,.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .dow div{text-align:center;font-size:10.5px;font-weight:700;color:var(--dim2);padding:2px 0 4px}
+  .dow div:first-child{color:var(--accent)}
+  .cell{
+    min-height:38px;aspect-ratio:1/1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    border-radius:11px;font-size:13px;font-family:inherit;color:var(--text);
+    background:none;border:1px solid transparent;padding:0;cursor:pointer;
+  }
+  .cell.empty{border:none;cursor:default}
+  .cell.has{
+    background:var(--accent-soft);border-color:var(--accent-line);
+    color:var(--accent);font-weight:800;
+  }
+  .cell.has small{width:4px;height:4px;border-radius:50%;background:var(--accent);display:block}
+  .cell.today{box-shadow:inset 0 0 0 1.6px var(--accent-line);font-weight:800}
+  .cell.today:not(.has){color:var(--accent)}
+  .cell.sel{box-shadow:inset 0 0 0 2px var(--accent);font-weight:800}
+  .cell.sel:not(.has){color:var(--accent)}
+  .legend{margin:10px 0 0;font-size:11.5px;color:var(--dim2);text-align:center}
+  .legend b{color:var(--accent);font-weight:700}
+
+  /* ── 날짜 기록 카드 ─────────────────────────── */
+  article.entry{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r);padding:16px 15px 14px;margin:12px 0 0;
+    box-shadow:var(--shadow);
+    scroll-margin-top:78px;
+  }
+  .dayhead{display:flex;align-items:center;gap:8px}
+  article.entry h3{
+    margin:0;font-size:15px;font-weight:800;letter-spacing:-.3px;
+  }
+  .badge{
+    margin-left:auto;flex:0 0 auto;font-size:10.5px;font-weight:700;
+    color:var(--dim);background:var(--fill);
+    border:1px solid var(--line);border-radius:999px;padding:2px 8px;
+  }
+  .badge.done{color:var(--ok);background:var(--ok-soft);border-color:transparent}
+  .when{margin:3px 0 0;font-size:11.5px;color:var(--dim2);font-weight:600}
+  .lab{
+    display:block;margin:15px 0 4px;
+    font-size:10px;font-weight:800;letter-spacing:.7px;color:var(--accent);
+  }
+  .ex{
+    flex:0 0 auto;font-size:9px;font-weight:800;letter-spacing:.3px;
+    color:var(--dim2);border:1px solid var(--line);border-radius:5px;
+    padding:0 4px;margin-top:4px;
+  }
+
+  /* 줄 목록 */
+  ul.lines{list-style:none;margin:0;padding:0}
+  ul.lines li{
+    display:flex;align-items:flex-start;gap:8px;
+    padding:5px 0;font-size:13.5px;line-height:1.55;color:var(--text);
+  }
+  ul.lines li .t{flex:1;min-width:0}
+  ul.lines li.none{color:var(--dim2);font-size:12.5px}
+  ul.lines .num{
+    flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+    min-width:17px;height:17px;margin-top:2px;padding:0 4px;
+    font-size:10.5px;font-weight:800;color:var(--dim2);
+    background:var(--fill);border-radius:6px;
+  }
+  .x{
+    flex:0 0 auto;border:0;background:none;color:var(--dim2);
+    font-size:16px;line-height:1;padding:0 5px;margin-top:-1px;cursor:pointer;
+  }
+  .x:active{color:var(--accent)}
+
+  /* 해야 할 거 */
+  ul.todo{list-style:none;margin:0;padding:0}
+  ul.todo li{display:flex;align-items:flex-start;gap:9px;padding:5px 0;font-size:13.5px;line-height:1.55}
+  ul.todo li .t{flex:1;min-width:0;cursor:pointer}
+  ul.todo li .t.done{color:var(--dim2);text-decoration:line-through}
+  ul.todo li.none{color:var(--dim2);font-size:12.5px}
+
+  /* 한 줄 추가 */
+  .secrow{
+    display:flex;gap:5px;flex-wrap:wrap;
+    margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--line2);
+  }
+  .sec{
+    font-size:11px;font-weight:700;color:var(--dim);
+    background:var(--fill);border:1px solid var(--line);
+    border-radius:999px;padding:4px 10px;cursor:pointer;
+  }
+  .sec.on{color:var(--accent);background:var(--accent-soft);border-color:var(--accent-line);font-weight:800}
+  .addrow{display:flex;gap:6px;margin-top:8px}
+  .addrow input{
+    flex:1;min-width:0;font-family:inherit;font-size:13px;color:var(--text);
+    background:var(--fill);border:1px solid var(--line);border-radius:10px;
+    padding:9px 11px;letter-spacing:-.2px;
+  }
+  .addrow input::placeholder{color:var(--dim2)}
+  .addrow .add{
+    flex:0 0 auto;font-size:17px;font-weight:800;color:#fff;
+    background:var(--accent);border:0;border-radius:10px;padding:0 15px;cursor:pointer;
+  }
+  .addrow .add:active{opacity:.85}
+
+  /* ── 메모 탭 ────────────────────────────────── */
+  .memhead{padding:16px 2px 0}
+  .memrow{display:flex;align-items:center;gap:8px}
+  .memrow h2{margin:0}
+  .act{
+    margin-left:auto;flex:0 0 auto;font-size:12px;font-weight:800;
+    color:var(--accent);background:var(--accent-soft);
+    border:1px solid var(--accent-line);border-radius:999px;
+    padding:6px 12px;cursor:pointer;
+  }
+  .daterow{display:flex;align-items:center;justify-content:center;gap:8px;margin:12px 0 0}
+  .daterow .nav{
+    width:32px;height:32px;border-radius:10px;
+    background:var(--fill);border:1px solid var(--line);color:var(--accent);
+    font-size:15px;line-height:1;padding:0;cursor:pointer;
+  }
+  .daterow .chip{
+    padding:7px 16px;border-radius:999px;
+    background:var(--accent-soft);border:1px solid var(--accent-line);
+    color:var(--accent);font-size:12.5px;font-weight:800;cursor:pointer;
+  }
+  .memo-cal{margin:12px 0 0}
+  .memo{
+    position:relative;margin:12px 0 0;padding:12px 34px 12px 14px;
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r-sm);box-shadow:var(--shadow-sm);
+    font-size:13.5px;line-height:1.62;
+  }
+  .memo .stamp{
+    display:flex;align-items:center;gap:6px;
+    font-size:11px;font-weight:800;color:var(--dim2);margin:0 0 4px;
+  }
+  .memo .body{white-space:pre-line;color:var(--text)}
+  .memo .x{position:absolute;right:7px;top:8px}
+  .memo-empty{
+    margin:14px 0 0;padding:16px 14px;text-align:center;
+    background:var(--card);border:1px dashed var(--line);border-radius:var(--r-sm);
+    font-size:12.5px;color:var(--dim2);line-height:1.6;
+  }
+  .compose{
+    margin:12px 0 0;padding:12px 13px;
+    background:var(--card);border:1px solid var(--accent-line);border-radius:var(--r-sm);
+    box-shadow:var(--shadow-sm);
+  }
+  .compose textarea{
+    width:100%;min-height:96px;resize:vertical;
+    font-family:inherit;font-size:13.5px;line-height:1.6;letter-spacing:-.2px;
+    color:var(--text);background:var(--fill);
+    border:1px solid var(--line);border-radius:10px;padding:10px 11px;
+  }
+  .compose .row{display:flex;align-items:center;gap:6px;margin-top:8px}
+  .compose .row button{
+    font-size:12px;font-weight:800;border-radius:9px;padding:8px 12px;cursor:pointer;
+    border:1px solid var(--line);background:var(--fill);color:var(--dim);
+  }
+  .compose .row .save{margin-left:auto;color:#fff;background:var(--accent);border-color:transparent}
+  .compose .hint{margin:7px 0 0;font-size:11px;color:var(--dim2);line-height:1.5}
+
+  /* ── 바닥 글 · 탭 ───────────────────────────── */
+  .foot{
+    margin:20px 2px 8px;text-align:center;
+    font-size:11px;line-height:1.7;color:var(--dim2);
+  }
+  .tabs{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    display:flex;align-items:center;gap:6px;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom));
+    background:var(--hdr);border-top:1px solid var(--line);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    backdrop-filter:saturate(180%) blur(14px);
+  }
+  .tab{
+    flex:1;height:38px;border:0;border-radius:13px;
+    background:transparent;font-size:13px;font-weight:700;color:var(--dim);
+    cursor:pointer;padding:0;
+  }
+  .tab.on{background:var(--accent-soft);color:var(--accent);font-weight:800}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="eyebrow"><i></i>VIBE NOTE</div>
+    <h1>바이브 노트</h1>
+  </div>
+  <button class="theme" id="theme" type="button" aria-label="다크·라이트 전환">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
+    </svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 14.4A8.4 8.4 0 1 1 9.6 4a6.8 6.8 0 0 0 10.4 10.4z"/>
+    </svg>
+  </button>
+</div>
+
+<div class="notice" id="notice" hidden>
+  <span>처음 열 때 <b>예시 기록</b>을 채워 두었습니다. 무엇을 적는 노트인지 보시고 <b>예시 지우기</b>로 비우세요. 적은 기록은 이 폰에만 남습니다.</span>
+  <button id="notice-clear" type="button">예시 지우기</button>
+</div>
+
+<main>
+  <!-- ① 일정 -->
+  <section class="pane" id="pane-schedule">
+    <div id="open-card" hidden>
+      <section>
+        <h2>안 끝난 일 <span class="count" id="open-count">0</span></h2>
+        <ul class="open" id="open-list"></ul>
+      </section>
+    </div>
+
+    <section>
+      <h2>달력</h2>
+      <div class="cal">
+        <div class="calhead">
+          <button class="nav" id="sched-prev" type="button" aria-label="이전 달">‹</button>
+          <div class="ym" id="sched-ym"></div>
+          <button class="today-btn" id="sched-today" type="button">오늘</button>
+          <button class="nav" id="sched-next" type="button" aria-label="다음 달">›</button>
+        </div>
+        <div class="dow"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+        <div class="grid" id="sched-grid"></div>
+        <p class="legend" id="sched-cap"></p>
+      </div>
+    </section>
+
+    <section>
+      <h2>날짜별 기록</h2>
+      <article class="entry" id="day-card"></article>
+    </section>
+
+    <p class="foot">적은 기록은 이 기기의 브라우저에만 저장됩니다.<br>홈 화면에 추가하면 앱처럼 열립니다.</p>
+  </section>
+
+  <!-- ② 메모 -->
+  <section class="pane" id="pane-memo" hidden>
+    <div class="memhead">
+      <div class="memrow">
+        <h2>메모</h2>
+        <button class="act" id="memo-new" type="button">＋ 쓰기</button>
+      </div>
+      <div class="daterow">
+        <button class="nav" id="memo-prev" type="button" aria-label="이전 날">‹</button>
+        <button class="chip" id="memo-chip" type="button" aria-label="달력 펼치기">오늘</button>
+        <button class="nav" id="memo-next" type="button" aria-label="다음 날">›</button>
+      </div>
+    </div>
+
+    <div class="cal memo-cal" id="memo-cal" hidden>
+      <div class="calhead">
+        <button class="nav" id="memo-prev-m" type="button" aria-label="이전 달">‹</button>
+        <div class="ym" id="memo-ym"></div>
+        <button class="nav" id="memo-next-m" type="button" aria-label="다음 달">›</button>
+      </div>
+      <div class="dow"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+      <div class="grid" id="memo-grid"></div>
+    </div>
+
+    <div class="compose" id="memo-compose" hidden>
+      <textarea id="memo-text" placeholder="이 날 남기고 싶은 것 — 길게 눌러 붙여넣기도 됩니다."></textarea>
+      <div class="row">
+        <button id="memo-paste" type="button">붙여넣기</button>
+        <button id="memo-cancel" type="button">취소</button>
+        <button class="save" id="memo-save" type="button">저장</button>
+      </div>
+      <p class="hint" id="memo-hint" hidden></p>
+    </div>
+
+    <div id="memo-list"></div>
+    <p class="foot">메모도 이 기기의 브라우저에만 저장됩니다.</p>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button class="tab on" id="tab-schedule" type="button">일정</button>
+  <button class="tab" id="tab-memo" type="button">메모</button>
+</nav>
+
+<script id="app-js">
+(function () {
+  "use strict";
+
+  /* ══ 저장소 ══════════════════════════════════
+     vn-entries-v1 : { "YYYY-MM-DD": {did:[], rules:[], decided:[], todos:[{t,done}]} }
+     vn-memos-v1   : { "YYYY-MM-DD": [{t:"HH:MM", text:"..."}] }
+     vn-theme      : "light" | "dark"
+     vn-example-v1 : {seeded:1}  — 예시를 한 번만 심기 위한 표시 */
+  var K_ENTRY = "vn-entries-v1";
+  var K_MEMO = "vn-memos-v1";
+  var K_THEME = "vn-theme";
+  var K_SEED = "vn-example-v1";
+
+  function raw(k) {
+    try { return window.localStorage ? localStorage.getItem(k) : null; } catch (e) { return null; }
+  }
+  function setRaw(k, v) {
+    try { if (window.localStorage) localStorage.setItem(k, v); } catch (e) {}
+  }
+  function readObj(k, fb) {
+    try {
+      var s = raw(k);
+      if (!s) return fb;
+      var o = JSON.parse(s);
+      if (o && typeof o === "object") return o;
+    } catch (e) {}
+    return fb;
+  }
+  function writeObj(k, o) { try { setRaw(k, JSON.stringify(o)); } catch (e) {} }
+
+  var DB = { entries: readObj(K_ENTRY, {}), memos: readObj(K_MEMO, {}) };
+
+  /* ══ 날짜 ════════════════════════════════════ */
+  var DOW = ["일", "월", "화", "수", "목", "금", "토"];
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function ymd(y, m, d) { return y + "-" + pad(m) + "-" + pad(d); }
+  function keyOf(d) { return ymd(d.getFullYear(), d.getMonth() + 1, d.getDate()); }
+  function parts(k) { var p = String(k).split("-"); return { y: +p[0], m: +p[1], d: +p[2] }; }
+  function todayKey() { return keyOf(new Date()); }
+  function shiftKey(k, n) {
+    var p = parts(k);
+    return keyOf(new Date(p.y, p.m - 1, p.d + n));
+  }
+  function labelOf(k) {
+    var p = parts(k);
+    return p.m + "월 " + p.d + "일 (" + DOW[new Date(p.y, p.m - 1, p.d).getDay()] + ")";
+  }
+  function shortOf(k) { var p = parts(k); return pad(p.m) + "-" + pad(p.d); }
+  function nowTime() { var d = new Date(); return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+
+  /* ══ 기록 다루기 ═════════════════════════════ */
+  function list(v) { return Object.prototype.toString.call(v) === "[object Array]" ? v : []; }
+  var SECS = ["did", "rules", "decided", "todos"];
+  function rec(k) {
+    var r = DB.entries[k] || {};
+    return { did: list(r.did), rules: list(r.rules), decided: list(r.decided), todos: list(r.todos) };
+  }
+  function isEmpty(r) {
+    return !(r.did.length || r.rules.length || r.decided.length || r.todos.length);
+  }
+  function saveRec(k, r) {
+    if (!r || isEmpty(r)) delete DB.entries[k];
+    else DB.entries[k] = r;
+    writeObj(K_ENTRY, DB.entries);
+  }
+  function hasRec(k) { return !isEmpty(rec(k)); }
+  function memosOf(k) { return list(DB.memos[k]); }
+  function saveMemos(k, a) {
+    if (!a || !a.length) delete DB.memos[k];
+    else DB.memos[k] = a;
+    writeObj(K_MEMO, DB.memos);
+  }
+
+  function addLine(k, sec, text) {
+    var t = String(text == null ? "" : text).replace(/^\s+|\s+$/g, "");
+    if (!t) return false;
+    var r = rec(k);
+    if (SECS.indexOf(sec) < 0) sec = "did";
+    if (sec === "todos") r.todos.push({ t: t, done: false });
+    else r[sec].push({ t: t });
+    saveRec(k, r);
+    return true;
+  }
+  function dropLine(k, sec, i) {
+    var r = rec(k);
+    if (!list(r[sec]).length) return;
+    r[sec].splice(i, 1);
+    saveRec(k, r);
+  }
+  function toggleTodo(k, i, on) {
+    var r = rec(k);
+    if (i < 0 || i >= r.todos.length) return;
+    r.todos[i].done = !!on;
+    saveRec(k, r);
+  }
+
+  function hasExample() {
+    var out = false;
+    Object.keys(DB.entries).forEach(function (k) {
+      var r = rec(k);
+      SECS.forEach(function (s) {
+        r[s].forEach(function (it) { if (it && it.ex) out = true; });
+      });
+    });
+    Object.keys(DB.memos).forEach(function (k) {
+      memosOf(k).forEach(function (m) { if (m && m.ex) out = true; });
+    });
+    return out;
+  }
+  function clearExamples() {
+    Object.keys(DB.entries).forEach(function (k) {
+      var r = rec(k);
+      SECS.forEach(function (s) { r[s] = r[s].filter(function (it) { return !(it && it.ex); }); });
+      saveRec(k, r);
+    });
+    Object.keys(DB.memos).forEach(function (k) {
+      saveMemos(k, memosOf(k).filter(function (m) { return !(m && m.ex); }));
+    });
+  }
+
+  /* ══ 처음 한 번, 예시 ════════════════════════
+     지우기 쉽게 모든 예시 줄에 ex:true 를 달아 둔다. */
+  function seedExample() {
+    if (readObj(K_SEED, null)) return;
+    if (!isEmpty(rec(todayKey())) || Object.keys(DB.memos).length) { writeObj(K_SEED, { seeded: 1 }); return; }
+    var t = todayKey(), y = shiftKey(t, -1), b = shiftKey(t, -3), m2 = shiftKey(t, -2);
+    DB.entries[t] = {
+      did: [{ t: "아침에 서른 분 걸었다", ex: true }, { t: "밀린 메일 열두 통 정리", ex: true }],
+      rules: [{ t: "결정은 그날 안에 한다", ex: true }, { t: "확인은 걸린 것이 클 때만 한다", ex: true }],
+      decided: [{ t: "이번 주에는 새 약속을 잡지 않는다", ex: true }],
+      todos: [{ t: "수요일 회의 자료 준비", done: false, ex: true },
+              { t: "도서관 책 반납", done: true, ex: true }]
+    };
+    DB.entries[y] = {
+      did: [{ t: "장보기 — 채소·우유·달걀", ex: true }],
+      rules: [], decided: [],
+      todos: [{ t: "전기요금 자동이체 확인", done: false, ex: true }]
+    };
+    DB.entries[b] = {
+      did: [{ t: "주말 계획 세 줄로 정리", ex: true }],
+      rules: [], decided: [{ t: "일요일 오전은 비워 둔다", ex: true }],
+      todos: []
+    };
+    DB.memos[t] = [{ t: "21:40", text: "예시 메모입니다. 집중이 잘 된 날.\n내일은 미뤄 둔 일부터 끝내기.", ex: true }];
+    DB.memos[m2] = [{ t: "08:15", text: "냉장고에 남은 반찬 확인. 주말에 정리하기.", ex: true }];
+    writeObj(K_ENTRY, DB.entries);
+    writeObj(K_MEMO, DB.memos);
+    writeObj(K_SEED, { seeded: 1 });
+  }
+
+  /* ══ 화면 요소 ═══════════════════════════════ */
+  function id(x) { return document.getElementById(x); }
+  var $ = {
+    theme: id("theme"),
+    notice: id("notice"), noticeClear: id("notice-clear"),
+    paneS: id("pane-schedule"), paneM: id("pane-memo"),
+    tabS: id("tab-schedule"), tabM: id("tab-memo"),
+    openCard: id("open-card"), openCount: id("open-count"), openList: id("open-list"),
+    schedPrev: id("sched-prev"), schedNext: id("sched-next"), schedToday: id("sched-today"),
+    schedYm: id("sched-ym"), schedGrid: id("sched-grid"), schedCap: id("sched-cap"),
+    dayCard: id("day-card"),
+    memoChip: id("memo-chip"), memoPrev: id("memo-prev"), memoNext: id("memo-next"),
+    memoCal: id("memo-cal"), memoYm: id("memo-ym"), memoGrid: id("memo-grid"),
+    memoPrevM: id("memo-prev-m"), memoNextM: id("memo-next-m"),
+    memoNew: id("memo-new"), memoList: id("memo-list"),
+    memoCompose: id("memo-compose"), memoText: id("memo-text"),
+    memoSave: id("memo-save"), memoCancel: id("memo-cancel"),
+    memoPaste: id("memo-paste"), memoHint: id("memo-hint")
+  };
+
+  var S = {
+    tab: "schedule",
+    schedDate: todayKey(), schedY: 0, schedM: 0,
+    memoDate: todayKey(), memoY: 0, memoM: 0, memoCalOpen: false,
+    addSec: "did", draft: "", draftMemo: ""
+  };
+  (function () {
+    var p = parts(S.schedDate); S.schedY = p.y; S.schedM = p.m;
+    p = parts(S.memoDate); S.memoY = p.y; S.memoM = p.m;
+  })();
+
+  /* ══ 작은 도우미 ═════════════════════════════ */
+  function E(tag, cls, txt) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = String(txt);
+    return n;
+  }
+  function clear(n) { if (n) n.textContent = ""; }
+  function btn(cls, txt, aria) {
+    var b = document.createElement("button");
+    b.type = "button";
+    if (cls) b.className = cls;
+    if (txt != null) b.textContent = String(txt);
+    if (aria) b.setAttribute("aria-label", aria);
+    return b;
+  }
+  function on(n, type, fn) { if (n) n.addEventListener(type, fn); }
+
+  /* ══ 테마 ════════════════════════════════════ */
+  function applyTheme(t) { document.documentElement.setAttribute("data-theme", t); }
+  on($.theme, "click", function () {
+    var now = document.documentElement.getAttribute("data-theme");
+    var next = now === "dark" ? "light" : "dark";
+    applyTheme(next);
+    setRaw(K_THEME, next);
+  });
+
+  /* ══ 탭 ══════════════════════════════════════ */
+  function setTab(t) {
+    S.tab = t === "memo" ? "memo" : "schedule";
+    var memoTab = S.tab === "memo";
+    if ($.paneS) $.paneS.hidden = memoTab;
+    if ($.paneM) $.paneM.hidden = !memoTab;
+    if ($.tabS) $.tabS.className = "tab" + (memoTab ? "" : " on");
+    if ($.tabM) $.tabM.className = "tab" + (memoTab ? " on" : "");
+    if (memoTab && S.memoCalOpen) renderMemoCal();
+  }
+  on($.tabS, "click", function () { setTab("schedule"); });
+  on($.tabM, "click", function () { setTab("memo"); });
+
+  /* ══ 달력 그리기 ═════════════════════════════ */
+  function paintCal(o) {
+    if (!o.grid) return;
+    clear(o.grid);
+    if (o.ym) o.ym.textContent = o.y + "년 " + o.m + "월";
+    var days = new Date(o.y, o.m, 0).getDate();
+    var start = new Date(o.y, o.m - 1, 1).getDay();
+    var i, k, cell;
+    for (i = 0; i < start; i++) o.grid.appendChild(E("div", "cell empty"));
+    for (i = 1; i <= days; i++) {
+      k = ymd(o.y, o.m, i);
+      var has = !!o.has(k);
+      cell = btn("cell" + (has ? " has" : "") + (k === todayKey() ? " today" : "") +
+                 (k === o.sel ? " sel" : ""), String(i));
+      cell.setAttribute("data-date", k);
+      if (has) cell.appendChild(document.createElement("small"));
+      if (o.sel === k) cell.setAttribute("aria-current", "date");
+      (function (key) {
+        on(cell, "click", function () { o.pick(key); });
+      })(k);
+      o.grid.appendChild(cell);
+    }
+  }
+
+  /* ══ 일정 · 안 끝난 일 ═══════════════════════ */
+  function renderOpen() {
+    if (!$.openList) return;
+    var keys = Object.keys(DB.entries).sort();
+    var items = [];
+    keys.forEach(function (k) {
+      var r = rec(k);
+      r.todos.forEach(function (it, i) {
+        if (!it.done) items.push({ k: k, i: i, t: it.t });
+      });
+    });
+    clear($.openList);
+    if ($.openCount) {
+      $.openCount.textContent = items.length ? items.length + "건" : "없음";
+      $.openCount.className = "count" + (items.length ? "" : " zero");
+    }
+    if ($.openCard) $.openCard.hidden = !items.length;
+    items.forEach(function (it) {
+      var li = E("li");
+      li.appendChild(E("span", "txt", it.t));
+      var j = btn("jump", shortOf(it.k), it.k + " 기록 열기");
+      on(j, "click", function () { pickScheduleDate(it.k); });
+      li.appendChild(j);
+      $.openList.appendChild(li);
+    });
+  }
+
+  /* ══ 일정 · 날짜별 기록 ══════════════════════ */
+  function sectionOf(r, sec) { return list(r[sec]); }
+
+  function lineList(k, sec, items, numbered) {
+    var ul = E("ul", "lines");
+    if (!items.length) {
+      ul.appendChild(E("li", "none", "아직 없음"));
+      return ul;
+    }
+    items.forEach(function (it, i) {
+      var li = E("li");
+      if (numbered) li.appendChild(E("span", "num", String(i + 1)));
+      li.appendChild(E("span", "t", it.t));
+      if (it.ex) li.appendChild(E("span", "ex", "예시"));
+      var x = btn("x", "×", "이 줄 지우기");
+      on(x, "click", function () { dropLine(k, sec, i); renderDay(); renderOpen(); });
+      li.appendChild(x);
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  function todoList(k, items) {
+    var ul = E("ul", "todo");
+    if (!items.length) {
+      ul.appendChild(E("li", "none", "아직 없음"));
+      return ul;
+    }
+    items.forEach(function (it, i) {
+      var li = E("li");
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!it.done;
+      cb.setAttribute("aria-label", it.t);
+      var sp = E("span", "t" + (it.done ? " done" : ""), it.t);
+      on(cb, "change", function () {
+        toggleTodo(k, i, cb.checked);
+        renderDay(); renderOpen();
+      });
+      on(sp, "click", function () {
+        var v = !it.done;
+        cb.checked = v;
+        toggleTodo(k, i, v);
+        renderDay(); renderOpen();
+      });
+      li.appendChild(cb);
+      li.appendChild(sp);
+      if (it.ex) li.appendChild(E("span", "ex", "예시"));
+      var x = btn("x", "×", "이 줄 지우기");
+      on(x, "click", function () { dropLine(k, "todos", i); renderDay(); renderOpen(); });
+      li.appendChild(x);
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  var SEC_LABEL = { did: "한 일", rules: "쓴 기준", decided: "결정한 것", todos: "해야 할 거" };
+  var SEC_PH = {
+    did: "한 일에 한 줄 추가", rules: "쓴 기준에 한 줄 추가",
+    decided: "결정한 것에 한 줄 추가", todos: "해야 할 거에 한 줄 추가"
+  };
+
+  function renderDay() {
+    var box = $.dayCard;
+    if (!box) return;
+    var k = S.schedDate, r = rec(k);
+    clear(box);
+
+    var head = E("div", "dayhead");
+    head.appendChild(E("h3", null, labelOf(k)));
+    var total = r.todos.length, done = 0;
+    r.todos.forEach(function (it) { if (it.done) done++; });
+    if (total) {
+      head.appendChild(E("span", "badge" + (done === total ? " done" : ""), done + "/" + total));
+    }
+    box.appendChild(head);
+
+    var t0 = todayKey(), rel = "";
+    if (k === t0) rel = " · 오늘";
+    else if (k === shiftKey(t0, -1)) rel = " · 어제";
+    else if (k === shiftKey(t0, 1)) rel = " · 내일";
+    box.appendChild(E("p", "when", parts(k).y + "년" + rel));
+
+    SECS.forEach(function (sec) {
+      box.appendChild(E("p", "lab", SEC_LABEL[sec]));
+      if (sec === "todos") box.appendChild(todoList(k, r.todos));
+      else box.appendChild(lineList(k, sec, r[sec], sec === "rules"));
+    });
+
+    /* 한 줄 추가 — 어느 칸에 넣을지 고르고 적는다 */
+    var secrow = E("div", "secrow");
+    SECS.forEach(function (sec) {
+      var b = btn("sec" + (S.addSec === sec ? " on" : ""), SEC_LABEL[sec]);
+      b.setAttribute("data-sec", sec);
+      on(b, "click", function () {
+        S.addSec = sec;
+        renderDay();
+        try { S.input && S.input.focus(); } catch (e) {}
+      });
+      secrow.appendChild(b);
+    });
+    box.appendChild(secrow);
+
+    var row = E("div", "addrow");
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.maxLength = 300;
+    inp.value = S.draft || "";
+    inp.setAttribute("placeholder", SEC_PH[S.addSec] || "한 줄 추가");
+    inp.setAttribute("aria-label", "한 줄 추가");
+    var add = btn("add", "＋", "한 줄 추가");
+    on(inp, "input", function () { S.draft = inp.value || ""; });
+    function submit() {
+      var v = (inp.value || "").replace(/^\s+|\s+$/g, "");
+      if (!v) return;
+      addLine(k, S.addSec, v);
+      S.draft = "";
+      inp.value = "";
+      renderDay();
+      renderOpen();
+      renderSchedCal();
+      try { S.input && S.input.focus(); } catch (e) {}
+    }
+    on(add, "click", submit);
+    on(inp, "keydown", function (ev) {
+      if (ev && ev.key === "Enter") { ev.preventDefault(); submit(); }
+    });
+    row.appendChild(inp);
+    row.appendChild(add);
+    box.appendChild(row);
+    S.input = inp;
+  }
+
+  function pickScheduleDate(k) {
+    S.schedDate = k;
+    var p = parts(k);
+    S.schedY = p.y; S.schedM = p.m;
+    S.draft = "";
+    renderDay();
+    renderSchedCal();
+    try { if ($.dayCard && $.dayCard.scrollIntoView) $.dayCard.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+  }
+
+  function renderSchedCal() {
+    var n = 0;
+    var keys = Object.keys(DB.entries);
+    keys.forEach(function (k) {
+      var p = parts(k);
+      if (p.y === S.schedY && p.m === S.schedM && hasRec(k)) n++;
+    });
+    paintCal({
+      grid: $.schedGrid, ym: $.schedYm,
+      y: S.schedY, m: S.schedM, sel: S.schedDate,
+      has: hasRec,
+      pick: function (k) { pickScheduleDate(k); }
+    });
+    if ($.schedCap) {
+      $.schedCap.innerHTML = n
+        ? "기록 <b>" + n + "일</b> · 빨간 칸을 누르면 그 날 기록이 열립니다"
+        : "이 달에 적은 기록은 아직 없습니다";
+    }
+  }
+
+  on($.schedPrev, "click", function () {
+    S.schedM--; if (S.schedM < 1) { S.schedM = 12; S.schedY--; } renderSchedCal();
+  });
+  on($.schedNext, "click", function () {
+    S.schedM++; if (S.schedM > 12) { S.schedM = 1; S.schedY++; } renderSchedCal();
+  });
+  on($.schedToday, "click", function () { pickScheduleDate(todayKey()); });
+
+  /* ══ 메모 ════════════════════════════════════ */
+  function renderMemoCal() {
+    paintCal({
+      grid: $.memoGrid, ym: $.memoYm,
+      y: S.memoY, m: S.memoM, sel: S.memoDate,
+      has: function (k) { return memosOf(k).length > 0; },
+      pick: function (k) {
+        S.memoDate = k;
+        S.memoCalOpen = false;
+        if ($.memoCal) $.memoCal.hidden = true;
+        renderMemos();
+      }
+    });
+  }
+
+  function renderMemos() {
+    if (!$.memoList) return;
+    if ($.memoChip) $.memoChip.textContent = labelOf(S.memoDate);
+    clear($.memoList);
+    var items = memosOf(S.memoDate);
+    if (!items.length) {
+      $.memoList.appendChild(E("p", "memo-empty", "이 날 남긴 메모가 없습니다.\n위의 '＋ 쓰기'로 적어 두세요."));
+      return;
+    }
+    items.forEach(function (m, i) {
+      var card = E("div", "memo");
+      var stamp = E("div", "stamp", "── " + (m.t || "") + " ──");
+      card.appendChild(stamp);
+      if (m.ex) stamp.appendChild(E("span", "ex", "예시"));
+      card.appendChild(E("div", "body", m.text));
+      var x = btn("x", "×", "이 메모 지우기");
+      on(x, "click", function () {
+        var a = memosOf(S.memoDate);
+        a.splice(i, 1);
+        saveMemos(S.memoDate, a);
+        renderMemos();
+        if (S.memoCalOpen) renderMemoCal();
+        renderNotice();
+      });
+      card.appendChild(x);
+      $.memoList.appendChild(card);
+    });
+  }
+
+  function openCompose() {
+    if (!$.memoCompose) return;
+    $.memoCompose.hidden = false;
+    if ($.memoText) $.memoText.value = "";
+    if ($.memoHint) { $.memoHint.hidden = true; $.memoHint.textContent = ""; }
+    try { if ($.memoText) $.memoText.focus(); } catch (e) {}
+  }
+  function closeCompose() { if ($.memoCompose) $.memoCompose.hidden = true; }
+
+  on($.memoNew, "click", openCompose);
+  on($.memoCancel, "click", closeCompose);
+  on($.memoSave, "click", function () {
+    if (!$.memoText) return;
+    var v = String($.memoText.value || "").replace(/^\s+|\s+$/g, "");
+    if (!v) {
+      try { $.memoText.focus(); } catch (e) {}
+      return;
+    }
+    var a = memosOf(S.memoDate);
+    a.push({ t: nowTime(), text: v });
+    saveMemos(S.memoDate, a);
+    closeCompose();
+    renderMemos();
+    if (S.memoCalOpen) renderMemoCal();
+  });
+
+  function insertAtCaret(ta, txt) {
+    var s = ta.selectionStart, e = ta.selectionEnd;
+    if (typeof s !== "number" || typeof e !== "number") {
+      ta.value = (ta.value || "") + txt;
+      return;
+    }
+    ta.value = ta.value.slice(0, s) + txt + ta.value.slice(e);
+    var p = s + txt.length;
+    try { ta.selectionStart = p; ta.selectionEnd = p; } catch (err) {}
+  }
+  on($.memoPaste, "click", function () {
+    var ta = $.memoText, hint = $.memoHint;
+    function blocked() {
+      if (!hint) return;
+      hint.hidden = false;
+      hint.textContent = "이 브라우저에서는 버튼 붙여넣기가 막혀 있습니다. 입력칸을 길게 눌러 '붙여넣기'를 쓰세요.";
+    }
+    try {
+      if (navigator && navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then(function (txt) {
+          if (txt && ta) insertAtCaret(ta, String(txt));
+          try { if (ta) ta.focus(); } catch (e) {}
+        }, blocked);
+      } else blocked();
+    } catch (e) { blocked(); }
+  });
+
+  on($.memoChip, "click", function () {
+    S.memoCalOpen = !S.memoCalOpen;
+    if ($.memoCal) $.memoCal.hidden = !S.memoCalOpen;
+    if (S.memoCalOpen) {
+      var p = parts(S.memoDate);
+      S.memoY = p.y; S.memoM = p.m;
+      renderMemoCal();
+    }
+    try { if (S.memoCalOpen && $.memoCal && $.memoCal.scrollIntoView) $.memoCal.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch (e) {}
+  });
+  on($.memoPrev, "click", function () {
+    S.memoDate = shiftKey(S.memoDate, -1);
+    var p = parts(S.memoDate); S.memoY = p.y; S.memoM = p.m;
+    renderMemos();
+    if (S.memoCalOpen) renderMemoCal();
+  });
+  on($.memoNext, "click", function () {
+    S.memoDate = shiftKey(S.memoDate, 1);
+    var p = parts(S.memoDate); S.memoY = p.y; S.memoM = p.m;
+    renderMemos();
+    if (S.memoCalOpen) renderMemoCal();
+  });
+  on($.memoPrevM, "click", function () {
+    S.memoM--; if (S.memoM < 1) { S.memoM = 12; S.memoY--; } renderMemoCal();
+  });
+  on($.memoNextM, "click", function () {
+    S.memoM++; if (S.memoM > 12) { S.memoM = 1; S.memoY++; } renderMemoCal();
+  });
+
+  /* ══ 예시 안내 ═══════════════════════════════ */
+  function renderNotice() {
+    if (!$.notice) return;
+    $.notice.hidden = !hasExample();
+  }
+  on($.noticeClear, "click", function () {
+    clearExamples();
+    renderAll();
+  });
+
+  /* ══ 그리기 ══════════════════════════════════ */
+  function renderAll() {
+    renderOpen();
+    renderSchedCal();
+    renderDay();
+    renderMemos();
+    renderMemoCal();
+    renderNotice();
+    setTab(S.tab);
+  }
+
+  seedExample();
+  renderAll();
+
+  /* ══ 오프라인(홈 화면 앱) 준비 ═══════════════ */
+  try {
+    if ("serviceWorker" in navigator) {
+      var run = function () {
+        try {
+          navigator.serviceWorker.register("sw.js").catch(function () {});
+        } catch (e) {}
+      };
+      if (document.readyState === "complete") run();
+      else window.addEventListener("load", run);
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
