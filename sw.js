@@ -1,5 +1,5 @@
 /* 바이브 노트 — 오프라인 캐시. 파일을 고치면 CACHE 이름의 숫자를 올린다. */
-var CACHE = "vibe-note-v6";
+var CACHE = "vibe-note-v7";
 var ASSETS = [
   "./",
   "./index.html",
