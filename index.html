@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#f3f5f9">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" id="vn-tc" content="#f3f5f9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="바이브 노트">
@@ -31,11 +31,14 @@
     } catch (e) {}
   }
   document.documentElement.setAttribute("data-theme", t);
+  var tc = document.getElementById("vn-tc");
+  if (tc) tc.setAttribute("content", t === "dark" ? "#0d0f13" : "#f3f5f9");
 })();
 </script>
 <style>
   /* ── 라이트 (기본) ───────────────────────────── */
   :root{
+    color-scheme:light;
     --bg:#f3f5f9;
     --bg-soft:#fbfcfe;
     --card:#ffffff;
@@ -59,6 +62,7 @@
   }
   /* ── 다크 ────────────────────────────────────── */
   [data-theme="dark"]{
+    color-scheme:dark;
     --bg:#0d0f13;
     --bg-soft:#121620;
     --card:#171b23;
@@ -137,12 +141,24 @@
 
   main{padding:0 14px}
 
+  /* ── 카드·배지 공통 ──────────────────────────
+     세 탭이 같은 물건처럼 보이도록 표면·반경·여백·글자 크기는 여기서만 정한다. */
+  .cal, article.entry, .brief, .memo, .compose, .memo-empty, .notice{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r);padding:15px;
+  }
+  .cal, article.entry, .open{box-shadow:var(--shadow)}
+  .brief, .memo, .compose, .memo-empty, .notice{box-shadow:var(--shadow-sm)}
+  .count, .badge, .kind, .ex{
+    display:inline-flex;align-items:center;border-radius:999px;
+    font-size:10.5px;font-weight:800;letter-spacing:.2px;padding:2px 8px;
+  }
+
   /* ── 안내 띠 ────────────────────────────────── */
   .notice{
     display:flex;align-items:center;gap:10px;
-    margin:12px 14px 0;padding:10px 12px;
-    background:var(--card);border:1px dashed var(--accent-line);
-    border-radius:var(--r-sm);box-shadow:var(--shadow-sm);
+    margin:12px 14px 0;padding:12px 14px;
+    border-style:dashed;border-color:var(--accent-line);
     font-size:11.5px;line-height:1.5;color:var(--dim);
   }
   .notice span{flex:1;min-width:0}
@@ -165,9 +181,9 @@
     background:linear-gradient(180deg,var(--accent),var(--accent-2));
   }
   .count{
-    margin-left:auto;font-size:11px;font-weight:700;
+    margin-left:auto;
     color:var(--accent);background:var(--accent-soft);
-    border:1px solid var(--accent-line);border-radius:999px;padding:2px 9px;
+    border:1px solid var(--accent-line);
   }
   .count.zero{color:var(--dim2);background:var(--fill);border-color:var(--line)}
 
@@ -209,10 +225,7 @@
   }
 
   /* ── 달력 ───────────────────────────────────── */
-  .cal{
-    background:var(--card);border:1px solid var(--line);
-    border-radius:var(--r);padding:14px 13px 12px;box-shadow:var(--shadow);
-  }
+  .cal{padding:14px 15px 13px}
   .calhead{display:flex;align-items:center;gap:8px;margin:0 0 10px}
   .calhead button{
     height:32px;flex:0 0 auto;
@@ -248,20 +261,14 @@
   .legend b{color:var(--accent);font-weight:700}
 
   /* ── 날짜 기록 카드 ─────────────────────────── */
-  article.entry{
-    background:var(--card);border:1px solid var(--line);
-    border-radius:var(--r);padding:16px 15px 14px;margin:12px 0 0;
-    box-shadow:var(--shadow);
-    scroll-margin-top:78px;
-  }
+  article.entry{margin:12px 0 0;scroll-margin-top:78px}
   .dayhead{display:flex;align-items:center;gap:8px}
   article.entry h3{
-    margin:0;font-size:15px;font-weight:800;letter-spacing:-.3px;
+    margin:0;font-size:14.5px;font-weight:800;letter-spacing:-.3px;
   }
   .badge{
-    margin-left:auto;flex:0 0 auto;font-size:10.5px;font-weight:700;
-    color:var(--dim);background:var(--fill);
-    border:1px solid var(--line);border-radius:999px;padding:2px 8px;
+    margin-left:auto;flex:0 0 auto;
+    color:var(--dim);background:var(--fill);border:1px solid var(--line);
   }
   .badge.done{color:var(--ok);background:var(--ok-soft);border-color:transparent}
   .when{margin:3px 0 0;font-size:11.5px;color:var(--dim2);font-weight:600}
@@ -270,9 +277,8 @@
     font-size:10px;font-weight:800;letter-spacing:.7px;color:var(--accent);
   }
   .ex{
-    flex:0 0 auto;font-size:9px;font-weight:800;letter-spacing:.3px;
-    color:var(--dim2);border:1px solid var(--line);border-radius:5px;
-    padding:0 4px;margin-top:4px;
+    flex:0 0 auto;margin-top:3px;
+    color:var(--dim2);border:1px solid var(--line);
   }
 
   /* 줄 목록 */
@@ -327,7 +333,7 @@
   .addrow .add:active{opacity:.85}
 
   /* ── 메모 탭 ────────────────────────────────── */
-  .memhead{padding:16px 2px 0}
+  .memhead{padding:18px 2px 0}
   .memrow{display:flex;align-items:center;gap:8px}
   .memrow h2{margin:0}
   .act{
@@ -349,27 +355,20 @@
   }
   .memo-cal{margin:12px 0 0}
   .memo{
-    position:relative;margin:12px 0 0;padding:12px 34px 12px 14px;
-    background:var(--card);border:1px solid var(--line);
-    border-radius:var(--r-sm);box-shadow:var(--shadow-sm);
+    position:relative;margin:12px 0 0;padding:15px 38px 15px 15px;
     font-size:13.5px;line-height:1.62;
   }
   .memo .stamp{
     display:flex;align-items:center;gap:6px;
-    font-size:11px;font-weight:800;color:var(--dim2);margin:0 0 4px;
+    font-size:11.5px;font-weight:800;color:var(--dim2);margin:0 0 4px;
   }
   .memo .body{white-space:pre-line;color:var(--text)}
   .memo .x{position:absolute;right:7px;top:8px}
   .memo-empty{
-    margin:14px 0 0;padding:16px 14px;text-align:center;
-    background:var(--card);border:1px dashed var(--line);border-radius:var(--r-sm);
-    font-size:12.5px;color:var(--dim2);line-height:1.6;
+    margin:12px 0 0;border-style:dashed;
+    text-align:center;font-size:12.5px;color:var(--dim2);line-height:1.6;
   }
-  .compose{
-    margin:12px 0 0;padding:12px 13px;
-    background:var(--card);border:1px solid var(--accent-line);border-radius:var(--r-sm);
-    box-shadow:var(--shadow-sm);
-  }
+  .compose{margin:12px 0 0;border-color:var(--accent-line)}
   .compose textarea{
     width:100%;min-height:96px;resize:vertical;
     font-family:inherit;font-size:13.5px;line-height:1.6;letter-spacing:-.2px;
@@ -383,6 +382,23 @@
   }
   .compose .row .save{margin-left:auto;color:#fff;background:var(--accent);border-color:transparent}
   .compose .hint{margin:7px 0 0;font-size:11px;color:var(--dim2);line-height:1.5}
+
+  /* ── 브리핑 탭 ──────────────────────────────── */
+  .brief{margin:12px 0 0}
+  .brief .top{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .brief .time{font-size:12.5px;font-weight:800;letter-spacing:-.1px}
+  .kind{
+    color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);
+  }
+  .kind.kr-close{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+  .brief .title{margin:6px 0 2px;font-size:14.5px;font-weight:800;letter-spacing:-.3px}
+  .brief ul.items{list-style:none;margin:4px 0 0;padding:0}
+  .brief ul.items li{
+    display:flex;align-items:flex-start;gap:9px;
+    padding:5px 0;font-size:13.5px;line-height:1.55;
+  }
+  .brief ul.items li .t{flex:1;min-width:0;cursor:pointer}
+  .brief ul.items li.off .t{color:var(--dim2);text-decoration:line-through}
 
   /* ── 바닥 글 · 탭 ───────────────────────────── */
   .foot{
@@ -462,7 +478,34 @@
     <p class="foot">적은 기록은 이 기기의 브라우저에만 저장됩니다.<br>홈 화면에 추가하면 앱처럼 열립니다.</p>
   </section>
 
-  <!-- ② 메모 -->
+  <!-- ② 브리핑 -->
+  <section class="pane" id="pane-brief" hidden>
+    <div class="memhead">
+      <div class="memrow">
+        <h2>브리핑 <span class="count" id="brief-count">–</span></h2>
+      </div>
+      <div class="daterow">
+        <button class="nav" id="brief-prev" type="button" aria-label="이전 날">‹</button>
+        <button class="chip" id="brief-chip" type="button" aria-label="달력 펼치기">오늘</button>
+        <button class="nav" id="brief-next" type="button" aria-label="다음 날">›</button>
+      </div>
+    </div>
+
+    <div class="cal memo-cal" id="brief-cal" hidden>
+      <div class="calhead">
+        <button class="nav" id="brief-prev-m" type="button" aria-label="이전 달">‹</button>
+        <div class="ym" id="brief-ym"></div>
+        <button class="nav" id="brief-next-m" type="button" aria-label="다음 달">›</button>
+      </div>
+      <div class="dow"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+      <div class="grid" id="brief-grid"></div>
+    </div>
+
+    <div id="brief-list"></div>
+    <p class="foot" id="brief-foot">브리핑은 각자의 피클(AI 비서)이 채워 넣는 자리입니다.<br>여기 숫자와 종목은 모두 예시입니다.</p>
+  </section>
+
+  <!-- ③ 메모 -->
   <section class="pane" id="pane-memo" hidden>
     <div class="memhead">
       <div class="memrow">
@@ -503,6 +546,7 @@
 
 <nav class="tabs">
   <button class="tab on" id="tab-schedule" type="button">일정</button>
+  <button class="tab" id="tab-brief" type="button">브리핑</button>
   <button class="tab" id="tab-memo" type="button">메모</button>
 </nav>
 
@@ -517,6 +561,8 @@
      vn-example-v1 : {seeded:1}  — 예시를 한 번만 심기 위한 표시 */
   var K_ENTRY = "vn-entries-v1";
   var K_MEMO = "vn-memos-v1";
+  var K_BRIEF = "vn-briefings-v1";
+  var K_BCHK = "vn-briefing-checks-v1";
   var K_THEME = "vn-theme";
   var K_SEED = "vn-example-v1";
 
@@ -537,7 +583,8 @@
   }
   function writeObj(k, o) { try { setRaw(k, JSON.stringify(o)); } catch (e) {} }
 
-  var DB = { entries: readObj(K_ENTRY, {}), memos: readObj(K_MEMO, {}) };
+  var DB = { entries: readObj(K_ENTRY, {}), memos: readObj(K_MEMO, {}), briefs: readObj(K_BRIEF, {}) };
+  var checks = readObj(K_BCHK, {});   /* {"2026-11-22/07:00/0": true} */
 
   /* ══ 날짜 ════════════════════════════════════ */
   var DOW = ["일", "월", "화", "수", "목", "금", "토"];
@@ -580,6 +627,20 @@
     writeObj(K_MEMO, DB.memos);
   }
 
+  /* 브리핑 — 날짜별 {time, kind, title, items:[{text, tag}]} */
+  var KIND_LABEL = {
+    "us-close": "미장 마감", "kr-close": "국장 마감",
+    "pre-open": "개장 전", "us-open": "미장 개장", "note": "메모"
+  };
+  function briefsOf(k) { return list(DB.briefs[k]); }
+  function bkey(k, time, i) { return k + "/" + time + "/" + i; }
+  function bchk(k, time, i) { return !!checks[bkey(k, time, i)]; }
+  function setBchk(k, time, i, v) {
+    var key = bkey(k, time, i);
+    if (v) checks[key] = true; else delete checks[key];
+    writeObj(K_BCHK, checks);
+  }
+
   function addLine(k, sec, text) {
     var t = String(text == null ? "" : text).replace(/^\s+|\s+$/g, "");
     if (!t) return false;
@@ -614,6 +675,13 @@
     Object.keys(DB.memos).forEach(function (k) {
       memosOf(k).forEach(function (m) { if (m && m.ex) out = true; });
     });
+    Object.keys(DB.briefs).forEach(function (k) {
+      briefsOf(k).forEach(function (en) {
+        if (!en) return;
+        if (en.ex) out = true;
+        list(en.items).forEach(function (it) { if (it && (it.ex || it.tag === "예시")) out = true; });
+      });
+    });
     return out;
   }
   function clearExamples() {
@@ -625,13 +693,28 @@
     Object.keys(DB.memos).forEach(function (k) {
       saveMemos(k, memosOf(k).filter(function (m) { return !(m && m.ex); }));
     });
+    Object.keys(DB.briefs).forEach(function (k) {
+      var keep = [];
+      briefsOf(k).forEach(function (en) {
+        if (!en || en.ex) return;
+        var its = list(en.items).filter(function (it) { return !(it && it.ex); });
+        if (!its.length) return;
+        en.items = its;
+        keep.push(en);
+      });
+      if (keep.length) DB.briefs[k] = keep; else delete DB.briefs[k];
+    });
+    writeObj(K_BRIEF, DB.briefs);
   }
 
   /* ══ 처음 한 번, 예시 ════════════════════════
      지우기 쉽게 모든 예시 줄에 ex:true 를 달아 둔다. */
   function seedExample() {
     if (readObj(K_SEED, null)) return;
-    if (!isEmpty(rec(todayKey())) || Object.keys(DB.memos).length) { writeObj(K_SEED, { seeded: 1 }); return; }
+    if (!isEmpty(rec(todayKey())) || Object.keys(DB.memos).length || Object.keys(DB.briefs).length) {
+      writeObj(K_SEED, { seeded: 1 });
+      return;
+    }
     var t = todayKey(), y = shiftKey(t, -1), b = shiftKey(t, -3), m2 = shiftKey(t, -2);
     DB.entries[t] = {
       did: [{ t: "아침에 서른 분 걸었다", ex: true }, { t: "밀린 메일 열두 통 정리", ex: true }],
@@ -652,8 +735,26 @@
     };
     DB.memos[t] = [{ t: "21:40", text: "예시 메모입니다. 집중이 잘 된 날.\n내일은 미뤄 둔 일부터 끝내기.", ex: true }];
     DB.memos[m2] = [{ t: "08:15", text: "냉장고에 남은 반찬 확인. 주말에 정리하기.", ex: true }];
+    /* 브리핑은 두 건만, 모두 예시 — 실제 수치·종목명은 넣지 않는다 */
+    DB.briefs[t] = [
+      {
+        time: "07:00", kind: "us-close", title: "미장 마감 — 예시 브리핑", ex: true,
+        items: [
+          { text: "지수 등락을 세 줄로 요약해 두는 자리입니다", tag: "예시", ex: true },
+          { text: "업종·종목 흐름 메모가 들어가는 자리입니다", tag: "예시", ex: true }
+        ]
+      },
+      {
+        time: "15:40", kind: "kr-close", title: "국장 마감 — 예시 브리핑", ex: true,
+        items: [
+          { text: "국장 수급 요약이 들어가는 자리입니다", tag: "예시", ex: true },
+          { text: "내일 아침에 볼 것 한 줄이 들어가는 자리입니다", tag: "예시", ex: true }
+        ]
+      }
+    ];
     writeObj(K_ENTRY, DB.entries);
     writeObj(K_MEMO, DB.memos);
+    writeObj(K_BRIEF, DB.briefs);
     writeObj(K_SEED, { seeded: 1 });
   }
 
@@ -662,12 +763,16 @@
   var $ = {
     theme: id("theme"),
     notice: id("notice"), noticeClear: id("notice-clear"),
-    paneS: id("pane-schedule"), paneM: id("pane-memo"),
-    tabS: id("tab-schedule"), tabM: id("tab-memo"),
+    paneS: id("pane-schedule"), paneB: id("pane-brief"), paneM: id("pane-memo"),
+    tabS: id("tab-schedule"), tabB: id("tab-brief"), tabM: id("tab-memo"),
     openCard: id("open-card"), openCount: id("open-count"), openList: id("open-list"),
     schedPrev: id("sched-prev"), schedNext: id("sched-next"), schedToday: id("sched-today"),
     schedYm: id("sched-ym"), schedGrid: id("sched-grid"), schedCap: id("sched-cap"),
     dayCard: id("day-card"),
+    briefChip: id("brief-chip"), briefPrev: id("brief-prev"), briefNext: id("brief-next"),
+    briefCal: id("brief-cal"), briefYm: id("brief-ym"), briefGrid: id("brief-grid"),
+    briefPrevM: id("brief-prev-m"), briefNextM: id("brief-next-m"),
+    briefCount: id("brief-count"), briefList: id("brief-list"),
     memoChip: id("memo-chip"), memoPrev: id("memo-prev"), memoNext: id("memo-next"),
     memoCal: id("memo-cal"), memoYm: id("memo-ym"), memoGrid: id("memo-grid"),
     memoPrevM: id("memo-prev-m"), memoNextM: id("memo-next-m"),
@@ -680,11 +785,13 @@
   var S = {
     tab: "schedule",
     schedDate: todayKey(), schedY: 0, schedM: 0,
+    briefDate: todayKey(), briefY: 0, briefM: 0, briefCalOpen: false,
     memoDate: todayKey(), memoY: 0, memoM: 0, memoCalOpen: false,
     addSec: "did", draft: "", draftMemo: ""
   };
   (function () {
     var p = parts(S.schedDate); S.schedY = p.y; S.schedM = p.m;
+    p = parts(S.briefDate); S.briefY = p.y; S.briefM = p.m;
     p = parts(S.memoDate); S.memoY = p.y; S.memoM = p.m;
   })();
 
@@ -717,15 +824,19 @@
 
   /* ══ 탭 ══════════════════════════════════════ */
   function setTab(t) {
-    S.tab = t === "memo" ? "memo" : "schedule";
-    var memoTab = S.tab === "memo";
-    if ($.paneS) $.paneS.hidden = memoTab;
-    if ($.paneM) $.paneM.hidden = !memoTab;
-    if ($.tabS) $.tabS.className = "tab" + (memoTab ? "" : " on");
-    if ($.tabM) $.tabM.className = "tab" + (memoTab ? " on" : "");
-    if (memoTab && S.memoCalOpen) renderMemoCal();
+    S.tab = (t === "memo" || t === "brief") ? t : "schedule";
+    var s = S.tab === "schedule", b = S.tab === "brief", m = S.tab === "memo";
+    if ($.paneS) $.paneS.hidden = !s;
+    if ($.paneB) $.paneB.hidden = !b;
+    if ($.paneM) $.paneM.hidden = !m;
+    if ($.tabS) $.tabS.className = "tab" + (s ? " on" : "");
+    if ($.tabB) $.tabB.className = "tab" + (b ? " on" : "");
+    if ($.tabM) $.tabM.className = "tab" + (m ? " on" : "");
+    if (b && S.briefCalOpen) renderBriefCal();
+    if (m && S.memoCalOpen) renderMemoCal();
   }
   on($.tabS, "click", function () { setTab("schedule"); });
+  on($.tabB, "click", function () { setTab("brief"); });
   on($.tabM, "click", function () { setTab("memo"); });
 
   /* ══ 달력 그리기 ═════════════════════════════ */
@@ -950,6 +1061,105 @@
   });
   on($.schedToday, "click", function () { pickScheduleDate(todayKey()); });
 
+  /* ══ 브리핑 ══════════════════════════════════════ */
+  function renderBriefCal() {
+    paintCal({
+      grid: $.briefGrid, ym: $.briefYm,
+      y: S.briefY, m: S.briefM, sel: S.briefDate,
+      has: function (k) { return briefsOf(k).length > 0; },
+      pick: function (k) {
+        S.briefDate = k;
+        S.briefCalOpen = false;
+        if ($.briefCal) $.briefCal.hidden = true;
+        renderBrief();
+      }
+    });
+  }
+
+  function renderBrief() {
+    if (!$.briefList) return;
+    var k = S.briefDate;
+    if ($.briefChip) $.briefChip.textContent = labelOf(k);
+    clear($.briefList);
+    var days = briefsOf(k).slice();
+    days.sort(function (a, b) {
+      return String((a && a.time) || "").localeCompare(String((b && b.time) || ""));
+    });
+    var total = 0, done = 0;
+    days.forEach(function (en) {
+      list(en && en.items).forEach(function (it, i) { total++; if (bchk(k, en.time, i)) done++; });
+    });
+    if ($.briefCount) {
+      $.briefCount.textContent = total ? (done === total ? "다 봄" : (total - done) + "개 남음") : "없음";
+      $.briefCount.className = "count" + (total && done < total ? "" : " zero");
+    }
+    if (!days.length) {
+      $.briefList.appendChild(E("p", "memo-empty",
+        "이 날은 브리핑이 없습니다.\n브리핑은 각자의 피클(AI 비서)이 채워 넣습니다."));
+      return;
+    }
+    days.forEach(function (en) {
+      if (!en) return;
+      var card = E("div", "brief");
+      var top = E("div", "top");
+      top.appendChild(E("span", "time", en.time || ""));
+      top.appendChild(E("span", "kind" + (en.kind ? " " + en.kind : ""),
+                         KIND_LABEL[en.kind] || en.kind || KIND_LABEL.note));
+      if (en.ex) top.appendChild(E("span", "ex", "예시"));
+      card.appendChild(top);
+      if (en.title) card.appendChild(E("p", "title", en.title));
+      var ul = E("ul", "items");
+      list(en.items).forEach(function (it, i) {
+        var ticked = bchk(k, en.time, i);
+        var li = E("li", ticked ? "off" : "");
+        var box = document.createElement("input");
+        box.type = "checkbox";
+        box.checked = ticked;
+        box.setAttribute("aria-label", it.text || "");
+        var sp = E("span", "t", it.text || "");
+        on(box, "change", function () { setBchk(k, en.time, i, box.checked); renderBrief(); });
+        on(sp, "click", function () {
+          setBchk(k, en.time, i, !bchk(k, en.time, i));
+          renderBrief();
+        });
+        li.appendChild(box);
+        li.appendChild(sp);
+        if (it.tag) li.appendChild(E("span", "ex", it.tag));
+        ul.appendChild(li);
+      });
+      card.appendChild(ul);
+      $.briefList.appendChild(card);
+    });
+  }
+
+  on($.briefChip, "click", function () {
+    S.briefCalOpen = !S.briefCalOpen;
+    if ($.briefCal) $.briefCal.hidden = !S.briefCalOpen;
+    if (S.briefCalOpen) {
+      var p = parts(S.briefDate);
+      S.briefY = p.y; S.briefM = p.m;
+      renderBriefCal();
+    }
+  });
+  on($.briefPrev, "click", function () {
+    S.briefDate = shiftKey(S.briefDate, -1);
+    var p = parts(S.briefDate); S.briefY = p.y; S.briefM = p.m;
+    renderBrief();
+    if (S.briefCalOpen) renderBriefCal();
+  });
+  on($.briefNext, "click", function () {
+    S.briefDate = shiftKey(S.briefDate, 1);
+    var p = parts(S.briefDate); S.briefY = p.y; S.briefM = p.m;
+    renderBrief();
+    if (S.briefCalOpen) renderBriefCal();
+  });
+  on($.briefPrevM, "click", function () {
+    S.briefM--; if (S.briefM < 1) { S.briefM = 12; S.briefY--; } renderBriefCal();
+  });
+  on($.briefNextM, "click", function () {
+    S.briefM++; if (S.briefM > 12) { S.briefM = 1; S.briefY++; } renderBriefCal();
+  });
+
   /* ══ 메모 ════════════════════════════════════ */
   function renderMemoCal() {
     paintCal({
@@ -1091,6 +1301,8 @@
     renderOpen();
     renderSchedCal();
     renderDay();
+    renderBrief();
+    renderBriefCal();
     renderMemos();
     renderMemoCal();
     renderNotice();
