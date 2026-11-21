@@ -1,5 +1,5 @@
 /* 바이브 노트 — 오프라인 캐시. 파일을 고치면 CACHE 이름의 숫자를 올린다. */
-var CACHE = "vibe-note-v9";
+var CACHE = "vibe-note-v10";
 var ASSETS = [
   "./",
   "./index.html",
@@ -35,6 +35,16 @@ self.addEventListener("fetch", function (e) {
   var url;
   try { url = new URL(req.url); } catch (err) { return; }
   if (url.origin !== self.location.origin) return;
+
+  /* 브리핑 자료는 자주 바뀐다 — 캐시에 가두지 않고 그때그때 받는다(화면은 네트워크 우선). */
+  if (url.pathname.indexOf("/data/briefings/") > -1) {
+    e.respondWith(
+      fetch(req).catch(function () {
+        return caches.match(req, { ignoreSearch: true });
+      })
+    );
+    return;
+  }
 
   e.respondWith(
     caches.match(req, { ignoreSearch: true }).then(function (hit) {

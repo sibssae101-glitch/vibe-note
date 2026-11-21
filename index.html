@@ -475,6 +475,56 @@
   .brief ul.items li .t{flex:1;min-width:0;cursor:pointer}
   .brief ul.items li.off .t{color:var(--dim2);text-decoration:line-through}
 
+  /* ── 자동으로 받아 온 줄 ───────────────────────
+     브리핑은 피클이 쌓은 JSON 을, 일정은 기기 달력을 화면이 스스로 읽는다.
+     받아 오는 중·실패는 화면을 막지 않는다(조용히 마지막 것 그대로). */
+  .autoline{
+    margin:14px 2px 0;font-size:11px;line-height:1.6;color:var(--dim2);
+    display:flex;align-items:center;gap:6px;
+  }
+  .autoline i{
+    width:5px;height:5px;border-radius:50%;background:var(--ok);flex:0 0 auto;
+  }
+  .autoline.off i{background:var(--line2)}
+  .devcal .lab{color:var(--dim)}
+  .devcal .lab .count{color:var(--accent);background:var(--accent-soft);margin-left:4px}
+  ul.dev{list-style:none;margin:0;padding:0}
+  ul.dev li{
+    display:flex;align-items:flex-start;gap:9px;
+    padding:5px 0;font-size:13.5px;line-height:1.55;
+  }
+  ul.dev .dt{
+    flex:0 0 auto;min-width:46px;
+    font-size:11.5px;font-weight:800;color:var(--accent);
+    letter-spacing:-.2px;padding-top:1px;
+  }
+  ul.dev li.allday .dt{color:var(--dim2);font-weight:700}
+  ul.dev .t{flex:1;min-width:0}
+  ul.dev li.more{padding-top:6px}
+  ul.dev li.more button{
+    font-family:inherit;font-size:11.5px;font-weight:700;color:var(--dim);
+    background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;
+  }
+
+  /* ── 지난 날짜(접어 둔 목록) ─────────────────── */
+  .past{margin:18px 0 0}
+  .past h3{
+    margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:.6px;color:var(--dim2);
+  }
+  .pastrow{
+    display:flex;align-items:center;gap:9px;width:100%;
+    margin:0 0 7px;padding:11px 13px;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);
+    box-shadow:var(--shadow-sm);
+    font-family:inherit;font-size:13px;font-weight:700;color:var(--text);
+    text-align:left;cursor:pointer;
+  }
+  .pastrow .d{flex:1;min-width:0}
+  .pastrow .n{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--dim2)}
+  .pastrow .caret{flex:0 0 auto;color:var(--dim2);font-size:11px}
+  .pastbody{margin:0 0 10px;padding:0 2px}
+  .pastbody .brief{margin:8px 0 0}
+
   /* ── 바닥 글 · 탭 ───────────────────────────── */
   .foot{
     margin:20px 2px 8px;text-align:center;
@@ -577,7 +627,9 @@
     </div>
 
     <div id="brief-list"></div>
-    <p class="foot" id="brief-foot">브리핑은 각자의 피클(AI 비서)이 채워 넣는 자리입니다.<br>여기 숫자와 종목은 모두 예시입니다.</p>
+    <div class="past" id="brief-past" hidden></div>
+    <p class="autoline" id="brief-auto" hidden><i></i><span></span></p>
+    <p class="foot" id="brief-foot">브리핑은 피클(AI 비서)이 채워 넣고, 이 화면이 자동으로 받아 옵니다.<br>처음 열 때 보이는 예시는 <b>예시</b> 표시가 붙어 있습니다.</p>
   </section>
 
   <!-- ③ 메모 -->
@@ -720,7 +772,18 @@
     "pre-open": "개장 전", "us-open": "미장 개장", "note": "메모",
     "score-watch": "점수 감시", "news": "속보", "serv": "종목 감시"
   };
-  function briefsOf(k) { return list(DB.briefs[k]); }
+  /* 브리핑 한 날 = 적어 둔 것 + 자동으로 받아 온 것.
+     같은 시각·같은 종류면 받아 온 쪽을 쓰고, 받아 온 것이 있으면 그 날의 '예시'는 감춘다. */
+  function briefsOf(k) {
+    var mine = list(DB.briefs[k]);
+    var auto = autoBriefs(k);
+    if (!auto.length) return mine;
+    var seen = {};
+    auto.forEach(function (en) { seen[autoKey(en)] = 1; });
+    return auto.concat(mine.filter(function (en) {
+      return !(en && en.ex) && !seen[autoKey(en)];
+    }));
+  }
   function bkey(k, time, i) { return k + "/" + time + "/" + i; }
   function bchk(k, time, i) { return !!checks[bkey(k, time, i)]; }
   function setBchk(k, time, i, v) {
@@ -903,6 +966,7 @@
     briefCal: id("brief-cal"), briefYm: id("brief-ym"), briefGrid: id("brief-grid"),
     briefPrevM: id("brief-prev-m"), briefNextM: id("brief-next-m"),
     briefCount: id("brief-count"), briefList: id("brief-list"),
+    briefPast: id("brief-past"), briefAuto: id("brief-auto"),
     memoCount: id("memo-count"), memoNew: id("memo-new"), memoList: id("memo-list"),
     memoEditor: id("memo-editor"), edBack: id("ed-back"), edWhen: id("ed-when"),
     edDel: id("ed-del"), edConfirm: id("ed-confirm"),
@@ -919,7 +983,8 @@
     schedDate: todayKey(), schedY: 0, schedM: 0,
     briefDate: todayKey(), briefY: 0, briefM: 0, briefCalOpen: false,
     edId: null,
-    addSec: "did", draft: ""
+    addSec: "did", draft: "",
+    briefOpen: {}, devMore: {}
   };
   (function () {
     var p = parts(S.schedDate); S.schedY = p.y; S.schedM = p.m;
@@ -964,6 +1029,7 @@
     if ($.tabB) $.tabB.className = "tab" + (b ? " on" : "");
     if ($.tabM) $.tabM.className = "tab" + (m ? " on" : "");
     if (b && S.briefCalOpen) renderBriefCal();
+    if (b) refreshAuto();
     if (m && narrowScreen() && $.memoEditor && $.memoEditor.hidden) openMemo(null);
   }
   on($.tabS, "click", function () { setTab("schedule"); });
@@ -1104,6 +1170,12 @@
     else if (k === shiftKey(t0, 1)) rel = " · 내일";
     box.appendChild(E("p", "when", parts(k).y + "년" + rel));
 
+    /* 기기 달력 — 앱 안에서는 그 날 일정이 손 대지 않아도 여기 뜬다. */
+    var evs = calForDay(k);
+    if (evs.length) box.appendChild(devList(k, evs.slice().sort(function (a, b) {
+      return String(a.start || "").localeCompare(String(b.start || ""));
+    })));
+
     SECS.forEach(function (sec) {
       box.appendChild(E("p", "lab", SEC_LABEL[sec]));
       if (sec === "todos") box.appendChild(todoList(k, r.todos));
@@ -1166,6 +1238,9 @@
 
   function renderSchedCal() {
     var n = 0;
+    var devMap = calForMonth(S.schedY, S.schedM);
+    var devN = 0;
+    Object.keys(devMap).forEach(function (k) { devN += devMap[k]; });
     var keys = Object.keys(DB.entries);
     keys.forEach(function (k) {
       var p = parts(k);
@@ -1174,13 +1249,15 @@
     paintCal({
       grid: $.schedGrid, ym: $.schedYm,
       y: S.schedY, m: S.schedM, sel: S.schedDate,
-      has: hasRec,
+      has: function (k) { return hasRec(k) || !!devMap[k]; },
       pick: function (k) { pickScheduleDate(k); }
     });
     if ($.schedCap) {
-      $.schedCap.innerHTML = n
+      var t = n
         ? "기록 <b>" + n + "일</b> · 빨간 칸을 누르면 그 날 기록이 열립니다"
         : "이 달에 적은 기록은 아직 없습니다";
+      if (devN) t += " · 기기 일정 <b>" + devN + "건</b>";
+      $.schedCap.innerHTML = t;
     }
   }
 
@@ -1207,6 +1284,38 @@
     });
   }
 
+  function briefCard(k, en) {
+    var card = E("div", "brief");
+    var top = E("div", "top");
+    top.appendChild(E("span", "time", en.time || ""));
+    top.appendChild(E("span", "kind" + (en.kind ? " " + en.kind : ""),
+                       KIND_LABEL[en.kind] || en.kind || KIND_LABEL.note));
+    if (en.ex) top.appendChild(E("span", "ex", "예시"));
+    card.appendChild(top);
+    if (en.title) card.appendChild(E("p", "title", en.title));
+    var ul = E("ul", "items");
+    list(en.items).forEach(function (it, i) {
+      var ticked = bchk(k, en.time, i);
+      var li = E("li", ticked ? "off" : "");
+      var box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = ticked;
+      box.setAttribute("aria-label", it.text || "");
+      var sp = E("span", "t", it.text || "");
+      on(box, "change", function () { setBchk(k, en.time, i, box.checked); renderBrief(); });
+      on(sp, "click", function () {
+        setBchk(k, en.time, i, !bchk(k, en.time, i));
+        renderBrief();
+      });
+      li.appendChild(box);
+      li.appendChild(sp);
+      if (it.tag) li.appendChild(E("span", "ex", it.tag));
+      ul.appendChild(li);
+    });
+    card.appendChild(ul);
+    return card;
+  }
+
   function renderBrief() {
     if (!$.briefList) return;
     var k = S.briefDate;
@@ -1226,40 +1335,13 @@
     }
     if (!days.length) {
       $.briefList.appendChild(E("p", "memo-empty", "이 날은 기록된 브리핑이 없습니다."));
-      return;
-    }
-    days.forEach(function (en) {
-      if (!en) return;
-      var card = E("div", "brief");
-      var top = E("div", "top");
-      top.appendChild(E("span", "time", en.time || ""));
-      top.appendChild(E("span", "kind" + (en.kind ? " " + en.kind : ""),
-                         KIND_LABEL[en.kind] || en.kind || KIND_LABEL.note));
-      if (en.ex) top.appendChild(E("span", "ex", "예시"));
-      card.appendChild(top);
-      if (en.title) card.appendChild(E("p", "title", en.title));
-      var ul = E("ul", "items");
-      list(en.items).forEach(function (it, i) {
-        var ticked = bchk(k, en.time, i);
-        var li = E("li", ticked ? "off" : "");
-        var box = document.createElement("input");
-        box.type = "checkbox";
-        box.checked = ticked;
-        box.setAttribute("aria-label", it.text || "");
-        var sp = E("span", "t", it.text || "");
-        on(box, "change", function () { setBchk(k, en.time, i, box.checked); renderBrief(); });
-        on(sp, "click", function () {
-          setBchk(k, en.time, i, !bchk(k, en.time, i));
-          renderBrief();
-        });
-        li.appendChild(box);
-        li.appendChild(sp);
-        if (it.tag) li.appendChild(E("span", "ex", it.tag));
-        ul.appendChild(li);
+    } else {
+      days.forEach(function (en) {
+        if (en) $.briefList.appendChild(briefCard(k, en));
       });
-      card.appendChild(ul);
-      $.briefList.appendChild(card);
-    });
+    }
+    renderPast();
+    renderAutoLine();
   }
 
   on($.briefChip, "click", function () {
@@ -1289,6 +1371,194 @@
   on($.briefNextM, "click", function () {
     S.briefM++; if (S.briefM > 12) { S.briefM = 1; S.briefY++; } renderBriefCal();
   });
+
+  /* ══ 자동 갱신 — 브리핑은 쌓인 JSON 을, 일정은 기기 달력을 읽는다 ════════
+     브리핑: 피클이 notes/briefings 에 쌓은 것을 data/briefings/ 로 내보내 두면,
+             화면이 열릴 때마다 그 JSON 을 받아 온다(앱을 다시 깔 필요 없음).
+     일정  : 앱 안에서는 기기 달력(이미 연결돼 있는 것)을 그대로 읽는다.
+             브라우저에는 그 통로가 없으니 조용히 넘어간다 — 적어 둔 기록만 보인다.
+     어느 쪽도 실패하면 마지막으로 받은 것을 그대로 보여 주고, 화면은 막지 않는다. */
+  var K_BRIEF_AUTO = "vn-brief-auto-v1";
+  var BRIEF_BASE = "data/briefings/";
+  var AUTO_GAP = 30000;               /* 30초 안에 받은 것은 다시 받지 않는다 */
+  var AUTO = readObj(K_BRIEF_AUTO, null);
+  if (!AUTO || typeof AUTO !== "object" || !AUTO.days) AUTO = { at: 0, days: {} };
+  var AUTO_BUSY = false, AUTO_FAIL = false;
+
+  function autoBriefs(k) { return list((AUTO.days || {})[k]); }
+  function autoKey(en) { return String((en && en.time) || "") + "|" + String((en && en.kind) || ""); }
+  function autoDayCount() { return Object.keys(AUTO.days || {}).length; }
+
+  function readJson(url) {
+    return new Promise(function (resolve, reject) {
+      try {
+        fetch(url, { cache: "no-store", credentials: "omit" })
+          .then(function (r) { return r && r.ok ? r.json() : null; })
+          .then(function (o) { resolve(o || null); })
+          .catch(reject);
+      } catch (e) { reject(e); }
+    });
+  }
+
+  function saveAuto() {
+    try { writeObj(K_BRIEF_AUTO, { at: AUTO.at, days: AUTO.days }); } catch (e) {}
+  }
+
+  function renderAutoLine() {
+    if (!$.briefAuto) return;
+    var n = autoDayCount();
+    if (!n && !AUTO_FAIL) { $.briefAuto.hidden = true; return; }
+    $.briefAuto.hidden = false;
+    $.briefAuto.className = "autoline" + (AUTO_FAIL ? " off" : "");
+    var t = AUTO.at ? new Date(AUTO.at) : null;
+    var hh = t ? pad(t.getHours()) + ":" + pad(t.getMinutes()) : "";
+    var text = AUTO_FAIL
+      ? "자동 갱신이 막혔습니다 — 기기에 받아 둔 브리핑을 보여 줍니다"
+      : (n ? "자동으로 받아 온 브리핑 " + n + "일" + (hh ? " · " + hh + " 갱신" : "") : "");
+    clear($.briefAuto);
+    $.briefAuto.appendChild(E("i"));
+    $.briefAuto.appendChild(E("span", null, text));
+  }
+
+  /* 받아 오기 — 오늘은 매번, 지난 날은 처음 볼 때만. 실패는 조용히. */
+  function refreshAuto() {
+    if (AUTO_BUSY) return;
+    if (typeof fetch !== "function") return;
+    if (AUTO.at && Date.now() - AUTO.at < AUTO_GAP) return;
+    AUTO_BUSY = true;
+    var t = todayKey();
+    readJson(BRIEF_BASE + "index.json?t=" + Date.now()).then(function (ix) {
+      var want = [];
+      list(ix && ix.days).forEach(function (d) {
+        var k = d && String(d.date || "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+        if (k === t || !AUTO.days[k]) want.push(k);
+      });
+      if (!want.length) return null;
+      return Promise.all(want.map(function (k) {
+        return readJson(BRIEF_BASE + k + ".json?t=" + Date.now()).then(function (day) {
+          if (day && list(day.entries).length) AUTO.days[k] = list(day.entries);
+          else delete AUTO.days[k];
+        }).catch(function () {});
+      }));
+    }).then(function () {
+      AUTO.at = Date.now();
+      AUTO_FAIL = false;
+      saveAuto();
+      renderBrief();
+      renderBriefCal();
+      renderAutoLine();
+    }).catch(function () {
+      AUTO_FAIL = true;
+      renderAutoLine();
+    }).then(function () { AUTO_BUSY = false; });
+  }
+
+  /* ── 기기 달력 ─────────────────────────────────────────────────────
+     앱이 넣어 주는 통로 하나만 쓴다: window.VibeNoteCalendar.events(from, to) →
+     '{"events":[{date,start,end,allDay,title,calendar,place}]}' (JSON 글자).
+     없으면 기능이 꺼진 것과 같다 — 요청도, 안내도 없다. */
+  var CAL = { on: false, cache: {}, at: {} };
+  function calBridge() {
+    try {
+      var b = window.VibeNoteCalendar;
+      return (b && typeof b.events === "function") ? b : null;
+    } catch (e) { return null; }
+  }
+  function calKey(y, m) { return y + "-" + pad(m); }
+  function calFetch(y, m) {
+    var key = calKey(y, m);
+    var fresh = CAL.cache[key] !== undefined && Date.now() - (CAL.at[key] || 0) < 60000;
+    if (fresh) return CAL.cache[key];
+    var b = calBridge();
+    if (!b) return [];
+    var from = ymd(y, m, 1), to = ymd(y, m, new Date(y, m, 0).getDate());
+    var out = [];
+    try {
+      var raw = b.events(from, to);
+      var o = typeof raw === "string" ? JSON.parse(raw) : raw;
+      list(o && o.events).forEach(function (ev) {
+        var d = String((ev && ev.date) || "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+        out.push({
+          date: d, start: String(ev.start || ""), end: String(ev.end || ""),
+          allDay: !!ev.allDay, title: String(ev.title || ""),
+          calendar: String(ev.calendar || ""), place: String(ev.place || "")
+        });
+      });
+      CAL.on = true;
+    } catch (e) {
+      CAL.on = false;
+      return [];
+    }
+    CAL.cache[key] = out;
+    CAL.at[key] = Date.now();
+    return out;
+  }
+  function calForDay(k) {
+    var p = parts(k);
+    return list(calFetch(p.y, p.m)).filter(function (ev) { return ev.date === k; });
+  }
+  function calForMonth(y, m) {
+    var map = {};
+    list(calFetch(y, m)).forEach(function (ev) { map[ev.date] = (map[ev.date] || 0) + 1; });
+    return map;
+  }
+  function devList(k, evs) {
+    var box = E("div", "devcal");
+    var lab = E("p", "lab", "기기 일정 ");
+    lab.appendChild(E("span", "count", String(evs.length)));
+    box.appendChild(lab);
+    var ul = E("ul", "dev");
+    var open = !!S.devMore[k];
+    evs.slice(0, open ? evs.length : 4).forEach(function (ev) {
+      var li = E("li", ev.allDay ? "allday" : "");
+      li.appendChild(E("span", "dt", ev.allDay ? "종일" : (ev.start || "")));
+      li.appendChild(E("span", "t", ev.title || "(제목 없음)"));
+      if (ev.calendar) li.appendChild(E("span", "ex", ev.calendar));
+      ul.appendChild(li);
+    });
+    if (!open && evs.length > 4) {
+      var more = E("li", "more");
+      var b = btn(null, "외 " + (evs.length - 4) + "건 더 보기");
+      on(b, "click", function () { S.devMore[k] = true; renderDay(); });
+      more.appendChild(b);
+      ul.appendChild(more);
+    }
+    box.appendChild(ul);
+    return box;
+  }
+
+  /* ── 지난 날짜 — 접어 둔 목록 ─────────────────── */
+  function pastBriefDays() {
+    var out = [];
+    Object.keys(AUTO.days || {}).forEach(function (k) {
+      if (k < S.briefDate && list(AUTO.days[k]).length) out.push(k);
+    });
+    return out.sort().reverse();
+  }
+  function renderPast() {
+    if (!$.briefPast) return;
+    clear($.briefPast);
+    var keys = pastBriefDays();
+    $.briefPast.hidden = !keys.length;
+    if (!keys.length) return;
+    $.briefPast.appendChild(E("h3", null, "지난 날짜"));
+    keys.slice(0, 14).forEach(function (k) {
+      var n = list(AUTO.days[k]).length;
+      var open = !!S.briefOpen[k];
+      var row = btn("pastrow", null);
+      row.appendChild(E("span", "d", labelOf(k)));
+      row.appendChild(E("span", "n", n + "건"));
+      row.appendChild(E("span", "caret", open ? "▴" : "▾"));
+      on(row, "click", function () { S.briefOpen[k] = !open; renderPast(); });
+      $.briefPast.appendChild(row);
+      if (!open) return;
+      var body = E("div", "pastbody");
+      list(AUTO.days[k]).forEach(function (en) { body.appendChild(briefCard(k, en)); });
+      $.briefPast.appendChild(body);
+    });
+  }
 
   /* ══ 메모 — 아이폰 메모처럼 그냥 쓰는 글 ═══════
      vn-notes-v1 : [{id, text, created, updated, ex?}]  · 최근 수정 순으로 보여 준다. */
@@ -1745,6 +2015,19 @@
   seedBriefOnce();
   migrateMemos();
   renderAll();
+
+  /* 자동 갱신 — 열 때 한 번, 다시 화면으로 돌아올 때(30초 지났으면) 한 번.
+     실패해도 조용히: 지난번에 받아 둔 것이 그대로 보인다. */
+  refreshAuto();
+  try {
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") {
+        refreshAuto();
+        if (S.tab === "schedule") { renderSchedCal(); renderDay(); }
+        if (S.tab === "brief") { renderBrief(); renderBriefCal(); }
+      }
+    });
+  } catch (e) {}
 
   /* ══ 오프라인(홈 화면 앱) 준비 ═══════════════ */
   try {
