@@ -1466,6 +1466,8 @@
     } catch (e) { return null; }
   }
   function calKey(y, m) { return y + "-" + pad(m); }
+  /* 앱으로 돌아왔을 때는 달력을 다시 읽는다 — 밖에서 일정을 고쳤을 수 있다. */
+  function calClear() { CAL.cache = {}; CAL.at = {}; }
   function calFetch(y, m) {
     var key = calKey(y, m);
     var fresh = CAL.cache[key] !== undefined && Date.now() - (CAL.at[key] || 0) < 60000;
@@ -2023,6 +2025,7 @@
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "visible") {
         refreshAuto();
+        calClear();
         if (S.tab === "schedule") { renderSchedCal(); renderDay(); }
         if (S.tab === "brief") { renderBrief(); renderBriefCal(); }
       }
