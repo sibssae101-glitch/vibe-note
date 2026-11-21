@@ -79,7 +79,7 @@
   [hidden]{display:none !important}
   html{-webkit-text-size-adjust:100%;background:var(--bg)}
   body{
-    margin:0;background:var(--bg);color:var(--text);
+    max-width:600px;margin:0 auto;background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
     font-size:15px;line-height:1.62;letter-spacing:-.2px;
     padding:0 0 calc(88px + env(safe-area-inset-bottom));
@@ -385,6 +385,7 @@
   }
   .tabs{
     position:fixed;left:0;right:0;bottom:0;z-index:30;
+    max-width:600px;margin:0 auto;
     display:flex;align-items:center;gap:6px;
     padding:8px 12px calc(8px + env(safe-area-inset-bottom));
     background:var(--hdr);border-top:1px solid var(--line);
