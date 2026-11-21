@@ -735,8 +735,16 @@
     };
     DB.memos[t] = [{ t: "21:40", text: "예시 메모입니다. 집중이 잘 된 날.\n내일은 미뤄 둔 일부터 끝내기.", ex: true }];
     DB.memos[m2] = [{ t: "08:15", text: "냉장고에 남은 반찬 확인. 주말에 정리하기.", ex: true }];
-    /* 브리핑은 두 건만, 모두 예시 — 실제 수치·종목명은 넣지 않는다 */
-    DB.briefs[t] = [
+    DB.briefs[t] = exampleBriefs();
+    writeObj(K_ENTRY, DB.entries);
+    writeObj(K_MEMO, DB.memos);
+    writeObj(K_BRIEF, DB.briefs);
+    writeObj(K_SEED, { seeded: 1 });
+  }
+
+  /* 브리핑 예시 — 두 건만, 모두 예시. 실제 수치·종목명은 넣지 않는다. */
+  function exampleBriefs() {
+    return [
       {
         time: "07:00", kind: "us-close", title: "미장 마감 — 예시 브리핑", ex: true,
         items: [
@@ -752,10 +760,16 @@
         ]
       }
     ];
-    writeObj(K_ENTRY, DB.entries);
-    writeObj(K_MEMO, DB.memos);
+  }
+
+  /* 브리핑 탭이 없던 때부터 쓰던 사람에게도, 브리핑이 하나도 없으면 한 번만 심는다. */
+  function seedBriefOnce() {
+    var flag = "vn-example-brief-v1";
+    if (readObj(flag, null)) return;
+    writeObj(flag, { seeded: 1 });
+    if (Object.keys(DB.briefs).length) return;
+    DB.briefs[todayKey()] = exampleBriefs();
     writeObj(K_BRIEF, DB.briefs);
-    writeObj(K_SEED, { seeded: 1 });
   }
 
   /* ══ 화면 요소 ═══════════════════════════════ */
@@ -1094,8 +1108,7 @@
       $.briefCount.className = "count" + (total && done < total ? "" : " zero");
     }
     if (!days.length) {
-      $.briefList.appendChild(E("p", "memo-empty",
-        "이 날은 브리핑이 없습니다.\n브리핑은 각자의 피클(AI 비서)이 채워 넣습니다."));
+      $.briefList.appendChild(E("p", "memo-empty", "이 날은 기록된 브리핑이 없습니다."));
       return;
     }
     days.forEach(function (en) {
@@ -1310,6 +1323,7 @@
   }
 
   seedExample();
+  seedBriefOnce();
   renderAll();
 
   /* ══ 오프라인(홈 화면 앱) 준비 ═══════════════ */
