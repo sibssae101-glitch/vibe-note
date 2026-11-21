@@ -147,8 +147,8 @@
     background:var(--card);border:1px solid var(--line);
     border-radius:var(--r);padding:15px;
   }
-  .cal, article.entry, .open{box-shadow:var(--shadow)}
-  .brief, .memo, .compose, .memo-empty, .notice{box-shadow:var(--shadow-sm)}
+  .cal, article.entry, .open, .brief, .memo, .compose, .memo-empty{box-shadow:var(--shadow)}
+  .notice{box-shadow:var(--shadow-sm)}
   .count, .badge, .kind, .ex{
     display:inline-flex;align-items:center;border-radius:999px;
     font-size:10.5px;font-weight:800;letter-spacing:.2px;padding:2px 8px;
@@ -171,6 +171,8 @@
 
   /* ── 구역 제목 ──────────────────────────────── */
   section{margin:22px 0 0}
+  .pane{margin:0}
+  #pane-schedule > section, #pane-schedule > #open-card > section{margin-top:18px}
   h2{
     display:flex;align-items:center;gap:8px;
     margin:0 0 10px;padding-right:2px;
@@ -225,7 +227,7 @@
   }
 
   /* ── 달력 ───────────────────────────────────── */
-  .cal{padding:14px 15px 13px}
+  .cal{padding:15px}
   .calhead{display:flex;align-items:center;gap:8px;margin:0 0 10px}
   .calhead button{
     height:32px;flex:0 0 auto;
@@ -274,7 +276,7 @@
   .when{margin:3px 0 0;font-size:11.5px;color:var(--dim2);font-weight:600}
   .lab{
     display:block;margin:15px 0 4px;
-    font-size:10px;font-weight:800;letter-spacing:.7px;color:var(--accent);
+    font-size:10.5px;font-weight:800;letter-spacing:.7px;color:var(--accent);
   }
   .ex{
     flex:0 0 auto;margin-top:3px;
@@ -334,7 +336,7 @@
 
   /* ── 메모 탭 ────────────────────────────────── */
   .memhead{padding:18px 2px 0}
-  .memrow{display:flex;align-items:center;gap:8px}
+  .memrow{display:flex;align-items:center;gap:8px;min-height:32px}
   .memrow h2{margin:0}
   .act{
     margin-left:auto;flex:0 0 auto;font-size:12px;font-weight:800;
@@ -360,7 +362,7 @@
   }
   .memo .stamp{
     display:flex;align-items:center;gap:6px;
-    font-size:11.5px;font-weight:800;color:var(--dim2);margin:0 0 4px;
+    font-size:12.5px;font-weight:800;color:var(--dim2);margin:0 0 4px;
   }
   .memo .body{white-space:pre-line;color:var(--text)}
   .memo .x{position:absolute;right:7px;top:8px}
