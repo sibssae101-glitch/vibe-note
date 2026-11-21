@@ -26,6 +26,7 @@ https://sibssae101-glitch.github.io/vibe-note/
 
 1. `index.html` 을 고친다.
 2. 오프라인 캐시를 새로 받게 `sw.js` 의 `vibe-note-v1` 숫자를 올린다(`vibe-note-v2` …).
-3. `main` 에 올리면 1~2분 뒤 GitHub Pages 에 반영된다.
+3. `main` 에 올리면 1~2분 뒤 GitHub Pages 에 반영된다. 이미 한 번 열어 본 사람은
+   서비스 워커가 이전 화면을 캐시에 들고 있어, 다음에 열 때 새로 받아 간다.
 
 기록은 방문자 브라우저에 있으므로 화면을 고쳐도 지워지지 않습니다.
