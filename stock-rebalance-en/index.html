@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1f6feb">
+<meta name="description" content="Stock Rebalance - a one-page calculator that turns your holdings and target weights into the exact share orders to place.">
+<title>Stock Rebalance</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:#eef1f5;color:#16202b;font-size:15px;line-height:1.4;
+  -webkit-text-size-adjust:100%;padding:0 0 calc(28px + env(safe-area-inset-bottom));
+}
+header{background:#1f6feb;color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px}
+header h1{margin:0;font-size:19px;letter-spacing:-.3px}
+header p{margin:4px 0 0;font-size:12.5px;opacity:.85}
+.wrap{padding:12px;max-width:760px;margin:0 auto}
+.card{background:#fff;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(16,32,58,.07)}
+.card h2{margin:0 0 10px;font-size:14px;color:#5a6b82;font-weight:700;letter-spacing:-.2px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.field{flex:1 1 130px;min-width:0}
+.field label{display:block;font-size:12px;color:#68788f;margin-bottom:4px;font-weight:600}
+input,select{
+  font-family:inherit;font-size:16px;color:#16202b;width:100%;height:42px;
+  border:1px solid #ccd5e0;border-radius:10px;background:#fff;padding:0 10px;min-width:0;
+}
+input:focus,select:focus{outline:2px solid #1f6feb;border-color:#1f6feb}
+input.num{text-align:right;font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:700;font-size:15px}
+button:active{filter:brightness(.95)}
+.btn{background:#e7ecf2;color:#16202b;height:42px;padding:0 14px}
+.btn.primary{background:#1f6feb;color:#fff}
+.btn.ghost{background:#fff;border:1px solid #ccd5e0}
+.toolbar{display:flex;gap:8px;margin-top:10px}
+.toolbar .btn{flex:1}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{background:#eef3fd;color:#1f6feb;border:1px solid #cfe0fd;border-radius:99px;padding:7px 12px;font-size:13px;font-weight:700}
+/* holding row */
+.asset{border:1px solid #e3e9f1;border-radius:12px;padding:10px;margin-bottom:8px;background:#fbfcfe}
+.asset .top{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.asset .top input.name{flex:1;height:40px;font-weight:700}
+.asset .top select{width:104px;height:40px;flex:0 0 auto}
+.asset .del{width:38px;height:40px;flex:0 0 auto;background:#fdecec;color:#c0392b;font-size:18px;line-height:1}
+.asset .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.asset .grid .field label{font-size:11px}
+.asset .grid input{height:40px}
+.hint{font-size:11.5px;color:#8794a7;margin-top:6px}
+/* results */
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.kpi{background:#f7f9fc;border-radius:12px;padding:10px 12px}
+.kpi .k{font-size:11.5px;color:#68788f;font-weight:600}
+.kpi .v{font-size:18px;font-weight:800;letter-spacing:-.4px;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:11.5px;color:#8794a7}
+.warn{background:#fff4e5;color:#8a5300;border-radius:10px;padding:9px 12px;font-size:13px;margin-bottom:10px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:9px 6px;text-align:right;font-size:13.5px;border-bottom:1px solid #eef1f5;white-space:nowrap}
+th{color:#68788f;font-size:11.5px;font-weight:700;border-bottom:1px solid #dfe6ef}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+td .bar{display:block;height:4px;border-radius:2px;background:#e3e9f1;margin-top:4px;overflow:hidden}
+td .bar i{display:block;height:100%;background:#1f6feb}
+td .bar i.over{background:#e08a00}
+.buy{color:#c0392b;font-weight:800}
+.sell{color:#1f6feb;font-weight:800}
+.hold{color:#8794a7}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:6px;background:#eef3fd;color:#1f6feb;margin-left:5px;vertical-align:middle}
+.tag.us{background:#f0ecfd;color:#6b46c1}
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tblwrap table{min-width:520px}
+.mode{display:flex;gap:6px;margin-bottom:10px}
+.mode button{flex:1;height:38px;font-size:13px;background:#eef1f5;color:#5a6b82;border-radius:9px}
+.mode button.on{background:#1f6feb;color:#fff}
+footer{text-align:center;font-size:11.5px;color:#93a0b3;padding:6px 12px 0}
+/* narrow phones: keep the order table on one screen */
+@media (max-width:430px){
+  .tblwrap table{min-width:0}
+  th,td{padding:8px 4px;font-size:12.5px}
+  th{font-size:10.5px}
+  .toolbar .btn{font-size:13px;padding:0 8px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Stock Rebalance</h1>
+  <p>Rebalance your US stock portfolio back to target weights</p>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>Setup</h2>
+    <div class="row">
+      <div class="field">
+        <label>New cash ($)</label>
+        <input class="num" id="newmoney" type="text" inputmode="numeric" value="0" placeholder="0">
+      </div>
+      <div class="field">
+        <label>KRW per $1</label>
+        <input class="num" id="fx" type="text" inputmode="decimal" value="1390">
+      </div>
+    </div>
+    <div class="mode" style="margin-top:10px">
+      <button id="modeA" class="on">Match weights exactly</button>
+      <button id="modeB">New cash only</button>
+    </div>
+    <div class="hint" id="modehint">Sell and buy as needed so every holding lands on its target weight.</div>
+  </div>
+
+  <div class="card">
+    <h2>Holdings</h2>
+    <div id="assets"></div>
+    <div class="chips" id="chips"></div>
+    <div class="toolbar">
+      <button class="btn ghost" id="addBtn">+ Add holding</button>
+      <button class="btn ghost" id="saveBtn">Save</button>
+      <button class="btn ghost" id="loadBtn">Load</button>
+    </div>
+    <div class="hint">US prices in dollars, Korean prices in won (converted at the rate above). If target weights do not add up to 100%, the rest is treated as cash.</div>
+  </div>
+
+  <div class="card">
+    <h2>Result</h2>
+    <div id="warn"></div>
+    <div class="summary">
+      <div class="kpi"><div class="k">Portfolio value</div><div class="v" id="kTotal">$0</div><div class="s" id="kTotalSub"></div></div>
+      <div class="kpi"><div class="k">After rebalance</div><div class="v" id="kAfter">$0</div><div class="s" id="kAfterSub"></div></div>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Holding</th><th>Current</th><th>Target</th><th>Order</th><th>Amount</th></tr></thead>
+        <tbody id="result"></tbody>
+      </table>
+    </div>
+    <div class="hint" id="cashnote"></div>
+  </div>
+
+  <footer>Inputs are saved on this device only &middot; Built 2026-11-23</footer>
+</div>
+
+<script>
+/* ===== state ===== */
+var STORE_KEY = 'rebal_en_v1';
+var state = {
+  fx: 1390,
+  newmoney: 0,
+  mode: 'A',          // A: sell and buy, B: new cash only
+  assets: [
+    {id:1, name:'QQQ',  market:'US', qty:20,  price:600, target:40},
+    {id:2, name:'QLD',  market:'US', qty:40,  price:100, target:30},
+    {id:3, name:'SOXL', market:'US', qty:100, price:30,  target:20},
+    {id:4, name:'NVDA', market:'US', qty:20,  price:180, target:10}
+  ],
+  nextId: 5
+};
+var PRESETS = [
+  {name:'QQQ',  market:'US', price:600},
+  {name:'QLD',  market:'US', price:100},
+  {name:'SOXL', market:'US', price:30},
+  {name:'NVDA', market:'US', price:180},
+  {name:'TQQQ', market:'US', price:51},
+  {name:'SPY',  market:'US', price:650},
+  {name:'SMH',  market:'US', price:300}
+];
+
+/* ===== number helpers ===== */
+function num(v){
+  if(typeof v === 'number') return v;
+  if(v === null || v === undefined) return 0;
+  var s = String(v).replace(/[^0-9.\-]/g, '');
+  var n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+function money(n){
+  var v = Math.round(Math.abs(n));
+  return (n < 0 ? '-$' : '$') + v.toLocaleString('en-US');
+}
+function pct(n, d){
+  if(!d) return '0.0%';
+  return (n / d * 100).toFixed(1) + '%';
+}
+
+/* ===== calculation ===== */
+// price per share in US dollars
+function unitUsd(a){
+  var p = num(a.price);
+  if(a.market === 'KR') return p / (num(state.fx) || 1);
+  return p;
+}
+// holding value in US dollars
+function valueOf(a){
+  return num(a.qty) * unitUsd(a);
+}
+
+function compute(){
+  var assets = state.assets.filter(function(a){ return a.name.trim() !== ''; });
+  var total = assets.reduce(function(s, a){ return s + valueOf(a); }, 0);
+  var newMoney = Math.max(0, num(state.newmoney));
+  var targetSum = assets.reduce(function(s, a){ return s + num(a.target); }, 0);
+  var after = total + newMoney;
+
+  var rows = [];
+  var deficits = 0;
+
+  assets.forEach(function(a){
+    var u = unitUsd(a);
+    var val = valueOf(a);
+    var targetVal = after * num(a.target) / 100;
+    var delta = targetVal - val;
+    if(state.mode === 'B' && delta > 0) deficits += delta;
+    rows.push({a:a, u:u, val:val, targetVal:targetVal, delta:delta});
+  });
+
+  var orders = [];
+
+  if(state.mode === 'A'){
+    // order the difference to target, in whole shares
+    rows.forEach(function(r){
+      var q = r.u > 0 ? Math.round(r.delta / r.u) : 0;
+      orders.push({r:r, qty:q, amount:q * r.u});
+    });
+  } else {
+    // new cash only: split it across the underweight holdings, never sell
+    rows.forEach(function(r){
+      var q = 0;
+      if(r.delta > 0 && deficits > 0){
+        var alloc = newMoney * (r.delta / deficits);
+        q = r.u > 0 ? Math.round(alloc / r.u) : 0;
+      }
+      orders.push({r:r, qty:q, amount:q * r.u});
+    });
+  }
+
+  var buy = 0, sell = 0;
+  orders.forEach(function(o){
+    if(o.amount > 0) buy += o.amount;
+    else sell += -o.amount;
+  });
+
+  return {
+    total: total, after: after, newMoney: newMoney, targetSum: targetSum,
+    count: assets.length, orders: orders, buy: buy, sell: sell,
+    cash: total - sell, net: buy - sell
+  };
+}
+
+/* ===== view ===== */
+var els = {};
+
+function renderAssets(){
+  var box = document.getElementById('assets');
+  box.innerHTML = '';
+  state.assets.forEach(function(a){
+    var d = document.createElement('div');
+    d.className = 'asset';
+    d.innerHTML =
+      '<div class="top">' +
+        '<input class="name" data-id="' + a.id + '" data-k="name" type="text" value="' + esc(a.name) + '" placeholder="Ticker">' +
+        '<select data-id="' + a.id + '" data-k="market">' +
+          '<option value="KR"' + (a.market === 'KR' ? ' selected' : '') + '>KR</option>' +
+          '<option value="US"' + (a.market === 'US' ? ' selected' : '') + '>US</option>' +
+        '</select>' +
+        '<button class="del" data-del="' + a.id + '">&times;</button>' +
+      '</div>' +
+      '<div class="grid">' +
+        '<div class="field"><label>Shares</label><input class="num" data-id="' + a.id + '" data-k="qty" type="text" inputmode="decimal" value="' + a.qty + '"></div>' +
+        '<div class="field"><label>' + (a.market === 'KR' ? 'Price (KRW)' : 'Price ($)') + '</label><input class="num" data-id="' + a.id + '" data-k="price" type="text" inputmode="decimal" value="' + a.price + '"></div>' +
+        '<div class="field"><label>Target (%)</label><input class="num" data-id="' + a.id + '" data-k="target" type="text" inputmode="decimal" value="' + a.target + '"></div>' +
+        '<div class="field"><label>Value</label><input class="num" data-val="' + a.id + '" type="text" value="' + money(valueOf(a)) + '" disabled></div>' +
+      '</div>';
+    box.appendChild(d);
+  });
+
+  Array.prototype.forEach.call(box.querySelectorAll('input[data-k],select[data-k]'), function(inp){
+    inp.addEventListener('input', function(){
+      var a = byId(+inp.getAttribute('data-id'));
+      if(!a) return;
+      var k = inp.getAttribute('data-k');
+      if(k === 'name') a.name = inp.value;
+      else if(k === 'market'){ a.market = inp.value; renderAll(); return; }
+      else a[k] = inp.value;
+      updateResults();
+      if(k === 'qty' || k === 'price') refreshValues();
+    });
+  });
+  Array.prototype.forEach.call(box.querySelectorAll('button[data-del]'), function(b){
+    b.addEventListener('click', function(){
+      var id = +b.getAttribute('data-del');
+      state.assets = state.assets.filter(function(x){ return x.id !== id; });
+      renderAll();
+    });
+  });
+}
+
+function refreshValues(){
+  Array.prototype.forEach.call(document.querySelectorAll('input[data-val]'), function(inp){
+    var a = byId(+inp.getAttribute('data-val'));
+    if(a) inp.value = money(valueOf(a));
+  });
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+function byId(id){
+  for(var i = 0; i < state.assets.length; i++) if(state.assets[i].id === id) return state.assets[i];
+  return null;
+}
+
+function updateResults(){
+  var r = compute();
+
+  document.getElementById('kTotal').textContent = money(r.total);
+  document.getElementById('kTotalSub').textContent = r.count + (r.count === 1 ? ' holding' : ' holdings');
+  document.getElementById('kAfter').textContent = money(r.after);
+  document.getElementById('kAfterSub').textContent = r.newMoney > 0 ? 'Includes ' + money(r.newMoney) + ' new cash' : 'No new cash';
+
+  var warn = document.getElementById('warn');
+  var msgs = [];
+  if(r.targetSum > 100.5) msgs.push('Target weights add up to ' + r.targetSum.toFixed(1) + '%. That is more than 100%.');
+  if(r.targetSum > 0 && r.targetSum < 99.5) msgs.push('Target weights add up to ' + r.targetSum.toFixed(1) + '%. The remaining ' + (100 - r.targetSum).toFixed(1) + '% is treated as cash.');
+  if(r.total === 0) msgs.push('Enter shares and prices to see the result.');
+  warn.innerHTML = msgs.length ? '<div class="warn">' + msgs.join('<br>') + '</div>' : '';
+
+  var tb = document.getElementById('result');
+  tb.innerHTML = '';
+  r.orders.forEach(function(o){
+    var a = o.r.a;
+    var curW = r.total > 0 ? o.r.val / r.total * 100 : 0;
+    var isBuy = o.qty > 0, isSell = o.qty < 0;
+    var qtyTxt = o.qty === 0 ? '&mdash;' : (isBuy ? '+' : '') + fmtQty(o.qty) + ' sh';
+    var amtTxt = o.amount === 0 ? '&mdash;' : (o.amount > 0 ? '+' : '') + money(o.amount);
+    var cls = isBuy ? 'buy' : (isSell ? 'sell' : 'hold');
+    var w = Math.min(100, curW);
+    tb.innerHTML +=
+      '<tr>' +
+        '<td>' + esc(a.name || 'Untitled') + '<span class="tag' + (a.market === 'US' ? ' us' : '') + '">' + (a.market === 'US' ? 'US' : 'KR') + '</span>' +
+          '<span class="bar"><i class="' + (curW > num(a.target) + 0.05 ? 'over' : '') + '" style="width:' + w + '%"></i></span></td>' +
+        '<td>' + curW.toFixed(1) + '%</td>' +
+        '<td>' + num(a.target).toFixed(0) + '%</td>' +
+        '<td class="' + cls + '">' + qtyTxt + '</td>' +
+        '<td class="' + cls + '">' + amtTxt + '</td>' +
+      '</tr>';
+  });
+
+  var note = document.getElementById('cashnote');
+  var parts = [];
+  parts.push('Total buys ' + money(r.buy));
+  parts.push('Total sells ' + money(r.sell));
+  if(r.newMoney > 0){
+    var diff = r.net - r.newMoney;
+    if(Math.abs(diff) <= 5) parts.push('Matches the new cash');
+    else parts.push(diff > 0 ? 'Need ' + money(diff) + ' more than the new cash' : 'New cash left over: ' + money(-diff));
+  } else if(Math.abs(r.net) <= 5){
+    parts.push('Buys and sells are about equal');
+  } else {
+    parts.push(r.net > 0 ? 'Buys exceed sells by ' + money(r.net) : 'Sells exceed buys by ' + money(-r.net));
+  }
+  note.innerHTML = parts.join(' &middot; ') + '<br>Whole-share rounding can leave a weight slightly off target (within about 1%).';
+}
+
+function fmtQty(q){
+  var v = Math.round(q * 100) / 100;
+  return v.toLocaleString('en-US');
+}
+
+function renderAll(){
+  renderAssets();
+  updateResults();
+}
+
+/* ===== events ===== */
+document.getElementById('fx').addEventListener('input', function(e){
+  state.fx = e.target.value; updateResults();
+});
+document.getElementById('newmoney').addEventListener('input', function(e){
+  state.newmoney = e.target.value; updateResults();
+});
+document.getElementById('addBtn').addEventListener('click', function(){
+  state.assets.push({id: state.nextId++, name:'', market:'US', qty:0, price:0, target:0});
+  renderAll();
+});
+document.getElementById('modeA').addEventListener('click', function(){ setMode('A'); });
+document.getElementById('modeB').addEventListener('click', function(){ setMode('B'); });
+function setMode(m){
+  state.mode = m;
+  document.getElementById('modeA').className = m === 'A' ? 'on' : '';
+  document.getElementById('modeB').className = m === 'B' ? 'on' : '';
+  document.getElementById('modehint').textContent = m === 'A'
+    ? 'Sell and buy as needed so every holding lands on its target weight.'
+    : 'Sell nothing. The new cash goes only to the holdings that are below target.';
+  updateResults();
+}
+document.getElementById('saveBtn').addEventListener('click', function(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    alert('Saved.');
+  }catch(e){ alert('Could not save.'); }
+});
+document.getElementById('loadBtn').addEventListener('click', function(){
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    if(!raw){ alert('Nothing saved yet.'); return; }
+    var s = JSON.parse(raw);
+    if(s && s.assets){ state = s; document.getElementById('fx').value = s.fx; document.getElementById('newmoney').value = s.newmoney; setMode(s.mode || 'A'); renderAll(); }
+  }catch(e){ alert('Could not load.'); }
+});
+
+/* preset chips */
+(function(){
+  var box = document.getElementById('chips');
+  PRESETS.forEach(function(p){
+    var b = document.createElement('button');
+    b.className = 'chip';
+    b.textContent = '+ ' + p.name;
+    b.addEventListener('click', function(){
+      state.assets.push({id: state.nextId++, name:p.name, market:p.market, qty:0, price:p.price, target:0});
+      renderAll();
+    });
+    box.appendChild(b);
+  });
+})();
+
+renderAll();
+</script>
+</body>
+</html>
